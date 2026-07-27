@@ -1,0 +1,23 @@
+# Binds each GTP done_condition id to an executable check.
+#
+# This file says HOW a condition is checked. It never says WHICH conditions
+# exist or what they mean — the GTP Contract on the issue owns that, and GTP
+# guarantees those cannot be redefined once posted.
+#
+# Commands are argv arrays, never shell strings.
+
+version: 1
+issue: https://github.com/agent-operated/exit-criteria/issues/2
+
+checks:
+  end_to_end:
+    argv: ["node", "--test", "dist/test/e2e/end-to-end.test.js"]
+
+  unavailable_is_not_pass:
+    argv: ["node", "--test", "dist/test/unit/unavailable.test.js"]
+
+  binding_required:
+    argv: ["node", "--test", "dist/test/unit/binding.test.js"]
+
+  decision_has_no_model:
+    argv: ["node", "--test", "dist/test/unit/no-model.test.js"]
