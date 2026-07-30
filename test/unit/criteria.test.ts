@@ -162,3 +162,41 @@ criteria:
 test("an empty criteria mapping cannot pass vacuously", () => {
   assert.throws(() => parseCriteria("version: 1\ncriteria: {}\n"), CriteriaError);
 });
+
+test("timeout_seconds cannot exceed the Node timer range", () => {
+  assert.throws(
+    () =>
+      parseCriteria(`
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+    timeout_seconds: 2147483.648
+`),
+    /timeout_seconds must not exceed 2147483\.647/,
+  );
+});
+
+test("RFC 8785 canonicalization rejects lone surrogates and accepts valid pairs", () => {
+  assert.throws(
+    () =>
+      parseCriteria(`
+version: 1
+criteria:
+  invalid:
+    text: "\\uD800"
+    argv: ["node", "a.js"]
+`),
+    /invalid Unicode/,
+  );
+
+  const valid = parseCriteria(`
+version: 1
+criteria:
+  valid:
+    text: "\\uD83D\\uDE00"
+    argv: ["node", "a.js"]
+`);
+  assert.equal(valid.criteria[0]?.text, "😀");
+});

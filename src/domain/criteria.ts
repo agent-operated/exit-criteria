@@ -23,6 +23,7 @@ export class CriteriaError extends Error {
 }
 
 const DEFAULT_TIMEOUT_SECONDS = 300;
+const MAX_TIMEOUT_SECONDS = 2_147_483.647;
 const TOP_LEVEL_KEYS = new Set(["version", "criteria"]);
 const CRITERION_KEYS = new Set(["text", "argv", "cwd", "timeout_seconds"]);
 
@@ -98,8 +99,29 @@ function parseCriterion(id: string, raw: unknown): Criterion {
   if (typeof timeout !== "number" || !Number.isFinite(timeout) || timeout <= 0) {
     throw new CriteriaError(`criterion "${id}" timeout_seconds must be a positive number`);
   }
+  if (timeout > MAX_TIMEOUT_SECONDS) {
+    throw new CriteriaError(
+      `criterion "${id}" timeout_seconds must not exceed ${String(MAX_TIMEOUT_SECONDS)}`,
+    );
+  }
 
   return { id, text, argv, cwd, timeoutSeconds: timeout };
+}
+
+function canonicalizeString(value: string): string {
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+      const next = value.charCodeAt(index + 1);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) {
+        throw new CriteriaError("effective criteria contain invalid Unicode");
+      }
+      index += 1;
+    } else if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+      throw new CriteriaError("effective criteria contain invalid Unicode");
+    }
+  }
+  return JSON.stringify(value);
 }
 
 /** RFC 8785 JSON Canonicalization Scheme for this schema's JSON-compatible values. */
@@ -108,7 +130,7 @@ function canonicalize(value: unknown): string {
     return JSON.stringify(value);
   }
   if (typeof value === "string") {
-    return JSON.stringify(value);
+    return canonicalizeString(value);
   }
   if (Array.isArray(value)) {
     return `[${value.map((item) => canonicalize(item)).join(",")}]`;
@@ -116,7 +138,7 @@ function canonicalize(value: unknown): string {
   if (isRecord(value)) {
     return `{${Object.keys(value)
       .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonicalize(value[key])}`)
+      .map((key) => `${canonicalizeString(key)}:${canonicalize(value[key])}`)
       .join(",")}}`;
   }
   throw new CriteriaError("effective criteria contain a value that cannot be canonicalized");

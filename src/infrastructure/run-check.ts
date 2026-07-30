@@ -32,6 +32,16 @@ function terminateChild(child: ChildProcess): void {
   }
 }
 
+function writeSpawnFailure(executable: string, error: unknown): void {
+  const detail =
+    error instanceof Error
+      ? ((error as NodeJS.ErrnoException).code ?? error.message)
+      : String(error);
+  process.stderr.write(
+    `exit-criteria: cannot start ${JSON.stringify(executable)}: ${detail}\n`,
+  );
+}
+
 /**
  * Runs one criterion. Exit 0 is PASS and another numeric exit is FAIL.
  * Startup failure, timeout, and signal termination are UNAVAILABLE.
@@ -52,11 +62,18 @@ export function runCheck(criterion: Criterion, repoRoot: string): Promise<CheckR
       return;
     }
 
-    const child = spawn(executable, args, {
-      cwd,
-      shell: false,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
+    let child;
+    try {
+      child = spawn(executable, args, {
+        cwd,
+        shell: false,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      writeSpawnFailure(executable, error);
+      resolvePromise({ kind: "unavailable", reason: "spawn_failed" });
+      return;
+    }
 
     // stdout belongs to the Exit Criteria report. Forward checker output to
     // stderr with stream backpressure instead of buffering it in memory.
@@ -101,10 +118,7 @@ export function runCheck(criterion: Criterion, repoRoot: string): Promise<CheckR
 
     child.on("error", (error: NodeJS.ErrnoException) => {
       spawnFailed = true;
-      const detail = error.code ?? error.message;
-      process.stderr.write(
-        `exit-criteria: cannot start ${JSON.stringify(executable)}: ${detail}\n`,
-      );
+      writeSpawnFailure(executable, error);
     });
 
     const timer = setTimeout(() => {

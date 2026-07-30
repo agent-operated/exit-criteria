@@ -52,10 +52,10 @@ function requiredValue(argv: readonly string[], index: number, flag: string): st
 }
 
 function parseArgs(argv: readonly string[]): CliAction {
-  if (argv.includes("--help") || argv.includes("-h")) {
+  if (argv[0] === "--help" || argv[0] === "-h") {
     return { kind: "help" };
   }
-  if (argv.includes("--version") || argv.includes("-v")) {
+  if (argv[0] === "--version" || argv[0] === "-v") {
     return { kind: "version" };
   }
   if (argv[0] !== "check") {
@@ -79,6 +79,12 @@ function parseArgs(argv: readonly string[]): CliAction {
       case "--json":
         json = true;
         break;
+      case "--help":
+      case "-h":
+        return { kind: "help" };
+      case "--version":
+      case "-v":
+        return { kind: "version" };
       default:
         throw new UsageError(`unknown argument: ${String(arg)}`);
     }

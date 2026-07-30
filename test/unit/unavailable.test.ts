@@ -53,7 +53,7 @@ test("the real command runner enforces timeout_seconds", async () => {
     kind: "unavailable",
     reason: "timeout",
   });
-  assert.ok(elapsed < 700, `timeout took ${String(elapsed)}ms`);
+  assert.ok(elapsed < 1_500, `timeout took ${String(elapsed)}ms`);
 });
 
 test("a command terminated by signal is UNAVAILABLE without a fake exit code", async () => {

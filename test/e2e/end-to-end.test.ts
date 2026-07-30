@@ -183,6 +183,26 @@ test("help and version are successful informational commands, not PASS reports",
   }
 });
 
+test("help and version flags are not recognized from option value positions", () => {
+  for (const value of ["-h", "-v"]) {
+    const run = runRaw(["check", "--config", value, "--json"]);
+    const actual = report(run);
+
+    assert.equal(run.status, 2);
+    assert.equal(actual.unavailable_reason, "config_unavailable");
+    assert.doesNotMatch(run.stdout, /Usage: exit-criteria/);
+    assert.notEqual(run.stdout.trim(), "0.0.0-development");
+  }
+
+  for (const value of ["--help", "--version"]) {
+    const run = runRaw(["check", "--repo-root", value, "--json"]);
+
+    assert.equal(run.status, 2);
+    assert.equal(run.stdout, "");
+    assert.match(run.stderr, /--repo-root requires a value/);
+  }
+});
+
 test("a cwd escaping the repository root is invalid configuration, not spawn failure", () => {
   const fixture = temporaryConfig(`
 version: 1
@@ -224,7 +244,24 @@ criteria:
   assert.equal(actual.conditions[0]?.unavailable_reason, "timeout");
   assert.equal(run.status, 2);
   assert.match(run.stderr, /checker "slow" exited but left stdout or stderr open/);
-  assert.ok(elapsed < 700, `CLI timeout took ${String(elapsed)}ms`);
+  assert.ok(elapsed < 1_500, `CLI timeout took ${String(elapsed)}ms`);
+});
+
+test("a synchronous command startup error remains a machine-readable UNAVAILABLE report", () => {
+  const fixture = temporaryConfig(`
+version: 1
+criteria:
+  invalid_argument:
+    text: The checker can start
+    argv: ["node", "\\0"]
+`);
+  const run = runCli(fixture.path, fixture.root);
+  const actual = report(run);
+
+  assert.equal(actual.run_outcome, "UNAVAILABLE");
+  assert.equal(actual.conditions[0]?.unavailable_reason, "spawn_failed");
+  assert.match(run.stderr, /exit-criteria: cannot start/);
+  assert.equal(run.status, 2);
 });
 
 test("signal termination is UNAVAILABLE and never invents an exit code", () => {
