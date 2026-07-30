@@ -1,0 +1,7 @@
+## 未決定事項
+
+Exit Criteriaが、どの設定を評価した結果かを、外部サービスなしで機械的に識別可能にするか。
+
+## 採用した手段
+
+Exit Criteriaは、実際に評価する全criteriaについて既定値を展開し、criterion ID順に並べた`version`、`id`、`text`、`argv`、`cwd`、`timeout_seconds`のJSONをRFC 8785 JSON Canonicalization SchemeでUTF-8 bytesへ変換し、SHA-256へ入力する。reportにはalgorithmを含むlowercase hexadecimalの`sha256:<digest>`形式で`config_digest`を出す。YAMLのコメント、空白、mappingの記述順はdigestへ含めない。

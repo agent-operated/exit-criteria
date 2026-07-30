@@ -1,7 +1,8 @@
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import process from "node:process";
 
-import type { Binding } from "../domain/bindings.js";
+import type { Criterion } from "../domain/criteria.js";
 import type { UnavailableReason } from "../domain/outcome.js";
 
 export type CheckRun =
@@ -20,63 +21,132 @@ function resolveCwd(repoRoot: string, requested: string): string {
   return target;
 }
 
+function terminateChild(child: ChildProcess): void {
+  if (child.pid === undefined) {
+    return;
+  }
+  try {
+    child.kill("SIGKILL");
+  } catch {
+    // Exiting between observation and signalling is already the desired state.
+  }
+}
+
 /**
- * Runs one bound check. The exit code decides PASS or FAIL; nothing in this
- * process interprets the command's output, and no model is consulted.
- *
- * A command that cannot be started, or that never finishes, is UNAVAILABLE.
- * It is not a failure of the condition — we simply did not learn anything.
+ * Runs one criterion. Exit 0 is PASS and another numeric exit is FAIL.
+ * Startup failure, timeout, and signal termination are UNAVAILABLE.
  */
-export function runCheck(binding: Binding, repoRoot: string): Promise<CheckRun> {
+export function runCheck(criterion: Criterion, repoRoot: string): Promise<CheckRun> {
   return new Promise((resolvePromise) => {
     let cwd: string;
     try {
-      cwd = resolveCwd(repoRoot, binding.cwd);
+      cwd = resolveCwd(repoRoot, criterion.cwd);
     } catch {
       resolvePromise({ kind: "unavailable", reason: "spawn_failed" });
       return;
     }
 
-    const [executable, ...args] = binding.argv;
+    const [executable, ...args] = criterion.argv;
     if (executable === undefined) {
       resolvePromise({ kind: "unavailable", reason: "spawn_failed" });
       return;
     }
 
-    // shell: false is not an optimisation. A shell string would let the binding
-    // file decide what runs, which is exactly what must stay fixed.
     const child = spawn(executable, args, {
       cwd,
       shell: false,
       stdio: ["ignore", "pipe", "pipe"],
     });
 
-    let spawnError = false;
-    let timedOut = false;
+    // stdout belongs to the Exit Criteria report. Forward checker output to
+    // stderr with stream backpressure instead of buffering it in memory.
+    child.stdout.pipe(process.stderr, { end: false });
+    child.stderr.pipe(process.stderr, { end: false });
 
-    child.stdout.on("data", () => {});
-    child.stderr.on("data", () => {});
-    child.on("error", () => {
-      spawnError = true;
+    let spawnFailed = false;
+    let directProcessExited = false;
+    let timedOut = false;
+    let settled = false;
+
+    const removeSignalHandlers = (): void => {
+      process.off("SIGINT", onSigint);
+      process.off("SIGTERM", onSigterm);
+    };
+
+    const interrupt = (signal: "SIGINT" | "SIGTERM"): void => {
+      removeSignalHandlers();
+      terminateChild(child);
+      process.kill(process.pid, signal);
+    };
+
+    const onSigint = (): void => interrupt("SIGINT");
+    const onSigterm = (): void => interrupt("SIGTERM");
+
+    const finish = (result: CheckRun, closePipes = false): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      removeSignalHandlers();
+      if (closePipes) {
+        child.stdout.unpipe(process.stderr);
+        child.stderr.unpipe(process.stderr);
+        child.stdout.destroy();
+        child.stderr.destroy();
+      }
+      resolvePromise(result);
+    };
+
+    process.once("SIGINT", onSigint);
+    process.once("SIGTERM", onSigterm);
+
+    child.on("error", (error: NodeJS.ErrnoException) => {
+      spawnFailed = true;
+      const detail = error.code ?? error.message;
+      process.stderr.write(
+        `exit-criteria: cannot start ${JSON.stringify(executable)}: ${detail}\n`,
+      );
     });
 
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill("SIGTERM");
-    }, binding.timeoutSeconds * 1000);
+      if (directProcessExited) {
+        process.stderr.write(
+          `exit-criteria: checker ${JSON.stringify(criterion.id)} exited but left stdout or stderr open\n`,
+        );
+      }
+      terminateChild(child);
+      finish({ kind: "unavailable", reason: "timeout" }, true);
+    }, criterion.timeoutSeconds * 1000);
     timer.unref();
 
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      if (spawnError) {
-        resolvePromise({ kind: "unavailable", reason: "spawn_failed" });
+    // `close` waits for inherited pipes. A conforming checker stays in the
+    // foreground until its work is done. Timeout still closes our pipe ends so
+    // a violating background process cannot keep Exit Criteria running.
+    child.on("exit", (_code, signal) => {
+      directProcessExited = true;
+      if (timedOut) {
+        finish({ kind: "unavailable", reason: "timeout" }, true);
+        return;
+      }
+      if (signal !== null) {
+        finish({ kind: "unavailable", reason: "terminated_by_signal" }, true);
+      }
+    });
+
+    child.on("close", (code, signal) => {
+      if (spawnFailed) {
+        finish({ kind: "unavailable", reason: "spawn_failed" }, true);
         return;
       }
       if (timedOut) {
-        resolvePromise({ kind: "unavailable", reason: "timeout" });
+        finish({ kind: "unavailable", reason: "timeout" }, true);
         return;
       }
-      resolvePromise({ kind: "ran", exitCode: code ?? 1 });
+      if (signal !== null || code === null) {
+        finish({ kind: "unavailable", reason: "terminated_by_signal" }, true);
+        return;
+      }
+      finish({ kind: "ran", exitCode: code });
     });
   });
 }

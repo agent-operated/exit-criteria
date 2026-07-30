@@ -1,33 +1,41 @@
 import type { ConditionResult, Outcome } from "../domain/outcome.js";
 
+export type RunUnavailableReason = "config_unavailable" | "invalid_config";
+
 export interface Report {
-  readonly issue: string;
+  readonly configDigest?: string;
   readonly results: readonly ConditionResult[];
   readonly runOutcome: Outcome;
-  readonly statusDetail?: string;
+  readonly unavailableReason?: RunUnavailableReason;
+  readonly message?: string;
 }
 
 export function formatText(report: Report): string {
   const lines: string[] = [];
-  lines.push(`issue: ${report.issue}`);
-  if (report.results.length === 0) {
-    lines.push(`no conditions were evaluated`);
-    if (report.statusDetail !== undefined) {
-      lines.push(`reason: ${report.statusDetail}`);
-    }
+  if (report.configDigest !== undefined) {
+    lines.push(`config: ${report.configDigest}`);
   }
-  for (const r of report.results) {
+  if (report.results.length === 0) {
+    lines.push("no criteria were evaluated");
+  }
+  for (const result of report.results) {
     const suffix =
-      r.outcome === "UNAVAILABLE"
-        ? `  (${r.unavailableReason ?? "unknown"})`
-        : r.exitCode !== undefined
-          ? `  (exit ${r.exitCode})`
+      result.outcome === "UNAVAILABLE"
+        ? `  (${result.unavailableReason ?? "unknown"})`
+        : result.exitCode !== undefined
+          ? `  (exit ${result.exitCode})`
           : "";
-    lines.push(`${r.outcome.padEnd(11)} ${r.conditionId}${suffix}`);
+    lines.push(`${result.outcome.padEnd(11)} ${result.conditionId}${suffix}`);
+    lines.push(`            ${result.text}`);
+  }
+  if (report.unavailableReason !== undefined) {
+    lines.push(`reason: ${report.unavailableReason}`);
+  }
+  if (report.message !== undefined) {
+    lines.push(`message: ${report.message}`);
   }
   lines.push("");
   lines.push(`run: ${report.runOutcome}`);
-  lines.push(`this result covers only the conditions listed above`);
   return lines.join("\n");
 }
 
@@ -35,16 +43,22 @@ export function formatJson(report: Report): string {
   return JSON.stringify(
     {
       tool: "exit-criteria",
-      issue: report.issue,
+      report_version: 1,
+      ...(report.configDigest === undefined ? {} : { config_digest: report.configDigest }),
       run_outcome: report.runOutcome,
-      conditions: report.results.map((r) => ({
-        condition_id: r.conditionId,
-        outcome: r.outcome,
-        evidence_kind: r.evidenceKind,
-        ...(r.unavailableReason === undefined ? {} : { unavailable_reason: r.unavailableReason }),
-        ...(r.exitCode === undefined ? {} : { exit_code: r.exitCode }),
+      conditions: report.results.map((result) => ({
+        condition_id: result.conditionId,
+        text: result.text,
+        outcome: result.outcome,
+        ...(result.unavailableReason === undefined
+          ? {}
+          : { unavailable_reason: result.unavailableReason }),
+        ...(result.exitCode === undefined ? {} : { exit_code: result.exitCode }),
       })),
-      authority: "none",
+      ...(report.unavailableReason === undefined
+        ? {}
+        : { unavailable_reason: report.unavailableReason }),
+      ...(report.message === undefined ? {} : { message: report.message }),
     },
     null,
     2,

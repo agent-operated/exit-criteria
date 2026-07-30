@@ -9,15 +9,14 @@ export type Outcome = "PASS" | "FAIL" | "UNAVAILABLE";
 
 /** Why a condition ended up UNAVAILABLE. Closed vocabulary; no free text. */
 export type UnavailableReason =
-  | "no_binding"
-  | "status_unavailable"
   | "spawn_failed"
+  | "terminated_by_signal"
   | "timeout";
 
 export interface ConditionResult {
   readonly conditionId: string;
+  readonly text: string;
   readonly outcome: Outcome;
-  readonly evidenceKind: string;
   /** Present only when outcome is UNAVAILABLE. */
   readonly unavailableReason?: UnavailableReason;
   /** Present only when a command actually ran to completion. */

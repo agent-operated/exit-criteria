@@ -1,7 +1,7 @@
 {
   "name": "exit-criteria",
   "version": "0.0.0-development",
-  "description": "Bind GTP done_conditions to executable checks and let a machine decide",
+  "description": "Replace an AI's done claim with executed acceptance-check results",
   "private": true,
   "type": "module",
   "bin": {
@@ -11,10 +11,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/test/unit/*.test.js dist/test/e2e/*.test.js",
-    "exit-criteria": "node dist/src/cli.js"
+    "exit-criteria": "node dist/src/cli.js check"
   },
   "dependencies": {
     "yaml": "2.9.0"
