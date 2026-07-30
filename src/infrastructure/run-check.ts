@@ -33,10 +33,9 @@ function terminateChild(child: ChildProcess): void {
 }
 
 function writeSpawnFailure(executable: string, error: unknown): void {
-  const detail =
-    error instanceof Error
-      ? ((error as NodeJS.ErrnoException).code ?? error.message)
-      : String(error);
+  const message = error instanceof Error ? error.message : String(error);
+  const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
+  const detail = code === undefined || code === message ? message : `${code}: ${message}`;
   process.stderr.write(
     `exit-criteria: cannot start ${JSON.stringify(executable)}: ${detail}\n`,
   );

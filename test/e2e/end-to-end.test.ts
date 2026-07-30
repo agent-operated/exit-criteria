@@ -261,6 +261,8 @@ criteria:
   assert.equal(actual.run_outcome, "UNAVAILABLE");
   assert.equal(actual.conditions[0]?.unavailable_reason, "spawn_failed");
   assert.match(run.stderr, /exit-criteria: cannot start/);
+  assert.match(run.stderr, /ERR_INVALID_ARG_VALUE/);
+  assert.match(run.stderr, /args\[0\].*null bytes/);
   assert.equal(run.status, 2);
 });
 

@@ -128,6 +128,9 @@ MCP SDK、model provider SDKを参照しないことをarchitecture testで検�
 
 `PASS`が示すのは、reportに列挙されたcriteriaが、その実行でexit code `0`を返したことだけである。
 
+`FAIL`が示すのは、直接起動したcheckerがnumeric nonzero exit codeを返したことだけである。
+criterion自体の不適合と、checker内部のdependencyまたは実行環境の不備は区別しない。
+
 `config_digest`が識別するのは実効manifestであり、checker scriptのbytes、profile release、
 artifact、commit、reportの真正性は識別しない。criteriaが弱い場合、またはcheckerが誤っている
 場合、`PASS`の保証も弱い。

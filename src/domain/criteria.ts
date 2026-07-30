@@ -67,7 +67,23 @@ function normalizeCwd(value: string, criterionId: string): string {
   return segments.join("/") || ".";
 }
 
+function assertValidUnicode(value: string, location: string): void {
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+      const next = value.charCodeAt(index + 1);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) {
+        throw new CriteriaError(`${location} contains invalid Unicode`);
+      }
+      index += 1;
+    } else if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+      throw new CriteriaError(`${location} contains invalid Unicode`);
+    }
+  }
+}
+
 function parseCriterion(id: string, raw: unknown): Criterion {
+  assertValidUnicode(id, "criterion id");
   if (id.length === 0) {
     throw new CriteriaError("criterion id must not be empty");
   }
@@ -80,6 +96,7 @@ function parseCriterion(id: string, raw: unknown): Criterion {
   if (typeof text !== "string" || text.trim() === "") {
     throw new CriteriaError(`criterion "${id}" must declare non-empty text`);
   }
+  assertValidUnicode(text, `criterion "${id}" text`);
 
   const argv = raw["argv"];
   if (!Array.isArray(argv) || argv.length === 0) {
@@ -88,11 +105,15 @@ function parseCriterion(id: string, raw: unknown): Criterion {
   if (!argv.every((argument): argument is string => typeof argument === "string")) {
     throw new CriteriaError(`criterion "${id}" argv must contain only strings`);
   }
+  argv.forEach((argument, index) => {
+    assertValidUnicode(argument, `criterion "${id}" argv[${String(index)}]`);
+  });
 
   const rawCwd = raw["cwd"] ?? ".";
   if (typeof rawCwd !== "string" || rawCwd === "") {
     throw new CriteriaError(`criterion "${id}" cwd must be a non-empty string`);
   }
+  assertValidUnicode(rawCwd, `criterion "${id}" cwd`);
   const cwd = normalizeCwd(rawCwd, id);
 
   const timeout = raw["timeout_seconds"] ?? DEFAULT_TIMEOUT_SECONDS;
@@ -109,18 +130,7 @@ function parseCriterion(id: string, raw: unknown): Criterion {
 }
 
 function canonicalizeString(value: string): string {
-  for (let index = 0; index < value.length; index += 1) {
-    const codeUnit = value.charCodeAt(index);
-    if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
-      const next = value.charCodeAt(index + 1);
-      if (!(next >= 0xdc00 && next <= 0xdfff)) {
-        throw new CriteriaError("effective criteria contain invalid Unicode");
-      }
-      index += 1;
-    } else if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
-      throw new CriteriaError("effective criteria contain invalid Unicode");
-    }
-  }
+  assertValidUnicode(value, "effective criteria");
   return JSON.stringify(value);
 }
 

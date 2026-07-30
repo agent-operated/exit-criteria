@@ -178,19 +178,57 @@ criteria:
   );
 });
 
-test("RFC 8785 canonicalization rejects lone surrogates and accepts valid pairs", () => {
-  assert.throws(
-    () =>
-      parseCriteria(`
+test("invalid Unicode diagnostics identify the criterion field", () => {
+  const invalid = [
+    {
+      source: `
 version: 1
 criteria:
-  invalid:
+  "\\uD800":
+    text: A
+    argv: ["node", "a.js"]
+`,
+      message: /criterion id contains invalid Unicode/,
+    },
+    {
+      source: `
+version: 1
+criteria:
+  a:
     text: "\\uD800"
     argv: ["node", "a.js"]
-`),
-    /invalid Unicode/,
-  );
+`,
+      message: /criterion "a" text contains invalid Unicode/,
+    },
+    {
+      source: `
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "\\uD800"]
+`,
+      message: /criterion "a" argv\[1\] contains invalid Unicode/,
+    },
+    {
+      source: `
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+    cwd: "\\uD800"
+`,
+      message: /criterion "a" cwd contains invalid Unicode/,
+    },
+  ];
 
+  for (const example of invalid) {
+    assert.throws(() => parseCriteria(example.source), example.message);
+  }
+});
+
+test("RFC 8785 canonicalization accepts valid surrogate pairs", () => {
   const valid = parseCriteria(`
 version: 1
 criteria:
