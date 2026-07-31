@@ -13,6 +13,7 @@ import {
   type Report,
   type RunUnavailableReason,
 } from "./presentation/report.js";
+import { escapeHumanValue } from "./presentation/human-value.js";
 
 interface Options {
   readonly config: string;
@@ -28,7 +29,8 @@ type CliAction =
 const HELP = `Usage: exit-criteria check [options]
 
 Options:
-  --config PATH      criteria file (default: exit-criteria.yml)
+  --config PATH      criteria file; relative PATH resolves from --repo-root
+                     (default: exit-criteria.yml)
   --repo-root PATH   root used for config and criterion cwd (default: current directory)
   --json             write a versioned JSON report to stdout
   -h, --help         show this help
@@ -154,6 +156,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  process.stderr.write(`ERROR ${error instanceof Error ? error.message : String(error)}\n`);
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`ERROR ${escapeHumanValue(message)}\n`);
   process.exitCode = 2;
 });

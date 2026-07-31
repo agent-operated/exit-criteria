@@ -1,10 +1,11 @@
-import type { ConditionResult, Outcome } from "../domain/outcome.js";
+import type { CriterionResult, Outcome } from "../domain/outcome.js";
+import { escapeHumanValue } from "./human-value.js";
 
 export type RunUnavailableReason = "config_unavailable" | "invalid_config";
 
 export interface Report {
   readonly configDigest?: string;
-  readonly results: readonly ConditionResult[];
+  readonly results: readonly CriterionResult[];
   readonly runOutcome: Outcome;
   readonly unavailableReason?: RunUnavailableReason;
   readonly message?: string;
@@ -25,14 +26,14 @@ export function formatText(report: Report): string {
         : result.exitCode !== undefined
           ? `  (exit ${result.exitCode})`
           : "";
-    lines.push(`${result.outcome.padEnd(11)} ${result.conditionId}${suffix}`);
-    lines.push(`            ${result.text}`);
+    lines.push(`${result.outcome.padEnd(11)} ${escapeHumanValue(result.criterionId)}${suffix}`);
+    lines.push(`            ${escapeHumanValue(result.text)}`);
   }
   if (report.unavailableReason !== undefined) {
     lines.push(`reason: ${report.unavailableReason}`);
   }
   if (report.message !== undefined) {
-    lines.push(`message: ${report.message}`);
+    lines.push(`message: ${escapeHumanValue(report.message)}`);
   }
   lines.push("");
   lines.push(`run: ${report.runOutcome}`);
@@ -43,11 +44,11 @@ export function formatJson(report: Report): string {
   return JSON.stringify(
     {
       tool: "exit-criteria",
-      report_version: 1,
+      report_version: 2,
       ...(report.configDigest === undefined ? {} : { config_digest: report.configDigest }),
       run_outcome: report.runOutcome,
-      conditions: report.results.map((result) => ({
-        condition_id: result.conditionId,
+      results: report.results.map((result) => ({
+        criterion_id: result.criterionId,
         text: result.text,
         outcome: result.outcome,
         ...(result.unavailableReason === undefined

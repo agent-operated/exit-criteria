@@ -1,5 +1,5 @@
 import type { Criterion } from "../domain/criteria.js";
-import type { ConditionResult } from "../domain/outcome.js";
+import type { CriterionResult } from "../domain/outcome.js";
 import { runCheck, type CheckRun } from "../infrastructure/run-check.js";
 
 export type CheckRunner = (
@@ -17,8 +17,8 @@ export async function evaluate(
   criteria: readonly Criterion[],
   repoRoot: string,
   runner: CheckRunner = defaultRunner,
-): Promise<readonly ConditionResult[]> {
-  const results: ConditionResult[] = [];
+): Promise<readonly CriterionResult[]> {
+  const results: CriterionResult[] = [];
   for (const criterion of criteria) {
     results.push(await evaluateOne(criterion, repoRoot, runner));
   }
@@ -29,8 +29,8 @@ async function evaluateOne(
   criterion: Criterion,
   repoRoot: string,
   runner: CheckRunner,
-): Promise<ConditionResult> {
-  const base = { conditionId: criterion.id, text: criterion.text };
+): Promise<CriterionResult> {
+  const base = { criterionId: criterion.id, text: criterion.text };
   const run = await runner(criterion, repoRoot);
   if (run.kind === "unavailable") {
     return { ...base, outcome: "UNAVAILABLE", unavailableReason: run.reason };

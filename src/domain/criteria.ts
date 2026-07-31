@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { parse } from "yaml";
+import { isMap, isScalar, parseDocument, visit } from "yaml";
 
 export interface Criterion {
   readonly id: string;
@@ -170,9 +170,33 @@ function digestFor(criteria: readonly Criterion[]): string {
 }
 
 export function parseCriteria(source: string): CriteriaConfig {
+  let document;
+  try {
+    document = parseDocument(source, { uniqueKeys: true });
+    const parseError = document.errors[0];
+    if (parseError !== undefined) {
+      throw parseError;
+    }
+  } catch (error) {
+    throw new CriteriaError(
+      `criteria file is not valid YAML: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  visit(document, {
+    Map(_key, map) {
+      if (!isMap(map)) return;
+      for (const pair of map.items) {
+        if (!isScalar(pair.key) || typeof pair.key.value !== "string") {
+          throw new CriteriaError("criteria file contains a non-string mapping key");
+        }
+      }
+    },
+  });
+
   let doc: unknown;
   try {
-    doc = parse(source, { uniqueKeys: true });
+    doc = document.toJS();
   } catch (error) {
     throw new CriteriaError(
       `criteria file is not valid YAML: ${error instanceof Error ? error.message : String(error)}`,

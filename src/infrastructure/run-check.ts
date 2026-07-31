@@ -4,6 +4,7 @@ import process from "node:process";
 
 import type { Criterion } from "../domain/criteria.js";
 import type { UnavailableReason } from "../domain/outcome.js";
+import { escapeHumanValue, quoteHumanValue } from "../presentation/human-value.js";
 
 export type CheckRun =
   | { readonly kind: "ran"; readonly exitCode: number }
@@ -37,7 +38,7 @@ function writeSpawnFailure(executable: string, error: unknown): void {
   const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
   const detail = code === undefined || code === message ? message : `${code}: ${message}`;
   process.stderr.write(
-    `exit-criteria: cannot start ${JSON.stringify(executable)}: ${detail}\n`,
+    `exit-criteria: cannot start ${quoteHumanValue(executable)}: ${escapeHumanValue(detail)}\n`,
   );
 }
 
@@ -124,7 +125,7 @@ export function runCheck(criterion: Criterion, repoRoot: string): Promise<CheckR
       timedOut = true;
       if (directProcessExited) {
         process.stderr.write(
-          `exit-criteria: checker ${JSON.stringify(criterion.id)} exited but left stdout or stderr open\n`,
+          `exit-criteria: checker ${quoteHumanValue(criterion.id)} exited but left stdout or stderr open\n`,
         );
       }
       terminateChild(child);

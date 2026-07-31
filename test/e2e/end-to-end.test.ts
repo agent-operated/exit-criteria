@@ -22,8 +22,8 @@ interface CliReport {
   config_digest?: string;
   run_outcome: string;
   unavailable_reason?: string;
-  conditions: {
-    condition_id: string;
+  results: {
+    criterion_id: string;
     text: string;
     outcome: string;
     unavailable_reason?: string;
@@ -69,18 +69,18 @@ test("the built CLI evaluates every declared criterion without GTP or a network"
   const actual = report(run);
 
   assert.equal(actual.tool, "exit-criteria");
-  assert.equal(actual.report_version, 1);
+  assert.equal(actual.report_version, 2);
   assert.match(actual.config_digest ?? "", /^sha256:[a-f0-9]{64}$/);
   assert.equal(actual.run_outcome, "FAIL");
   assert.equal(run.status, 1);
   assert.deepEqual(
-    actual.conditions.map((condition) => condition.condition_id),
+    actual.results.map((result) => result.criterion_id),
     ["command_fails", "command_passes"],
   );
-  assert.equal(actual.conditions[0]?.outcome, "FAIL");
-  assert.equal(actual.conditions[0]?.exit_code, 3);
-  assert.equal(actual.conditions[1]?.outcome, "PASS");
-  assert.equal(actual.conditions[1]?.exit_code, 0);
+  assert.equal(actual.results[0]?.outcome, "FAIL");
+  assert.equal(actual.results[0]?.exit_code, 3);
+  assert.equal(actual.results[1]?.outcome, "PASS");
+  assert.equal(actual.results[1]?.exit_code, 0);
 });
 
 test("--repo-root selects another project for both config and checker cwd", () => {
@@ -110,11 +110,53 @@ criteria:
   const actual = report(run);
 
   assert.equal(actual.run_outcome, "UNAVAILABLE");
-  assert.equal(actual.conditions[0]?.unavailable_reason, "spawn_failed");
+  assert.equal(actual.results[0]?.unavailable_reason, "spawn_failed");
   assert.match(run.stderr, /exit-criteria: cannot start/);
   assert.match(run.stderr, /exit-criteria-command-that-does-not-exist/);
   assert.match(run.stderr, /ENOENT/);
   assert.equal(run.status, 2);
+});
+
+test("spawn failure diagnostics escape line and terminal-control characters", () => {
+  const fixture = temporaryConfig(`
+version: 1
+criteria:
+  missing:
+    text: The required checker can run
+    argv: ["missing\\nbinary\\u001b\\u202e"]
+`);
+  const run = runCli(fixture.path, fixture.root);
+
+  assert.equal(run.status, 2);
+  assert.equal(report(run).run_outcome, "UNAVAILABLE");
+  assert.match(run.stderr, /missing\\u000abinary\\u001b\\u202e/);
+  assert.doesNotMatch(run.stderr, /\u001b|\u202e/);
+  assert.equal(run.stderr.split("\n").length, 2);
+});
+
+test("an unavailable criterion does not prevent later criteria from being evaluated", () => {
+  const fixture = temporaryConfig(`
+version: 1
+criteria:
+  a_missing:
+    text: The required checker can run
+    argv: ["exit-criteria-command-that-does-not-exist"]
+  b_later:
+    text: Later criteria are still evaluated
+    argv: ["node", "-e", "require('node:fs').writeFileSync('later-ran', '')"]
+`);
+  const run = runCli(fixture.path, fixture.root);
+  const actual = report(run);
+
+  assert.equal(run.status, 2);
+  assert.equal(actual.run_outcome, "UNAVAILABLE");
+  assert.deepEqual(
+    actual.results.map((result) => result.criterion_id),
+    ["a_missing", "b_later"],
+  );
+  assert.equal(actual.results[0]?.outcome, "UNAVAILABLE");
+  assert.equal(actual.results[1]?.outcome, "PASS");
+  assert.equal(existsSync(join(fixture.root, "later-ran")), true);
 });
 
 test("invalid configuration still returns a machine-readable report and exits two", () => {
@@ -126,6 +168,46 @@ test("invalid configuration still returns a machine-readable report and exits tw
   assert.equal(actual.unavailable_reason, "invalid_config");
   assert.equal(actual.config_digest, undefined);
   assert.equal(run.status, 2);
+});
+
+test("numeric and quoted criterion ids cannot collide into a false PASS", () => {
+  const fixture = temporaryConfig(`
+version: 1
+criteria:
+  1:
+    text: Numeric criterion fails
+    argv: ["node", "-e", "require('node:fs').writeFileSync('numeric-ran', ''); process.exit(1)"]
+  "1":
+    text: String criterion passes
+    argv: ["node", "-e", "require('node:fs').writeFileSync('string-ran', ''); process.exit(0)"]
+`);
+  const run = runCli(fixture.path, fixture.root);
+  const actual = report(run);
+
+  assert.equal(run.status, 2);
+  assert.equal(actual.run_outcome, "UNAVAILABLE");
+  assert.equal(actual.unavailable_reason, "invalid_config");
+  assert.equal(actual.config_digest, undefined);
+  assert.deepEqual(actual.results, []);
+  assert.equal(existsSync(join(fixture.root, "numeric-ran")), false);
+  assert.equal(existsSync(join(fixture.root, "string-ran")), false);
+});
+
+test("human output keeps injected identifiers and text on one physical line", () => {
+  const fixture = temporaryConfig(`
+version: 1
+criteria:
+  "line\\nbreak\\\\id\\u202e":
+    text: "日本語 stays readable; line\\nbreak; escape \\u001b[31m"
+    argv: ["node", "-e", "process.exit(0)"]
+`);
+  const run = runRaw(["check", "--config", fixture.path, "--repo-root", fixture.root]);
+
+  assert.equal(run.status, 0);
+  assert.match(run.stdout, /PASS\s+line\\u000abreak\\\\id\\u202e/);
+  assert.match(run.stdout, /日本語 stays readable; line\\u000abreak; escape \\u001b\[31m/);
+  assert.doesNotMatch(run.stdout, /\u001b|\u202e/);
+  assert.equal(run.stdout.split("\n").length, 6);
 });
 
 test("an unavailable configuration file returns a machine-readable report and exits two", () => {
@@ -168,6 +250,7 @@ test("help and version are successful informational commands, not PASS reports",
     const run = runRaw(args);
     assert.equal(run.status, 0);
     assert.match(run.stdout, /exit-criteria check/);
+    assert.match(run.stdout, /relative PATH resolves from --repo-root/);
     assert.doesNotMatch(run.stdout, /run_outcome/);
   }
 
@@ -180,8 +263,32 @@ test("help and version are successful informational commands, not PASS reports",
   for (const args of [["help"], ["version"]]) {
     const unsupported = runRaw(args);
     assert.equal(unsupported.status, 2);
+    assert.equal(unsupported.stdout, "");
     assert.match(unsupported.stderr, /usage: exit-criteria check/);
   }
+});
+
+test("--json does not invent a report for command-line usage errors", () => {
+  for (const args of [
+    ["check", "--json", "--unknown"],
+    ["check", "--json", "--config"],
+  ]) {
+    const run = runRaw(args);
+
+    assert.equal(run.status, 2);
+    assert.equal(run.stdout, "");
+    assert.match(run.stderr, /unknown argument|requires a value/);
+  }
+});
+
+test("usage diagnostics escape line and terminal-control characters", () => {
+  const run = runRaw(["check", "--json", "--unknown\n\u001b\u202e"]);
+
+  assert.equal(run.status, 2);
+  assert.equal(run.stdout, "");
+  assert.match(run.stderr, /--unknown\\u000a\\u001b\\u202e/);
+  assert.doesNotMatch(run.stderr, /\u001b|\u202e/);
+  assert.equal(run.stderr.split("\n").length, 2);
 });
 
 test("help and version flags are not recognized from option value positions", () => {
@@ -224,7 +331,7 @@ test("a checker that violates the foreground contract is bounded by timeout", ()
   const fixture = temporaryConfig(`
 version: 1
 criteria:
-  slow:
+  "slow\\n\\u001b\\u202e":
     text: The checker finishes before its deadline
     argv:
       - node
@@ -242,9 +349,13 @@ criteria:
   const actual = report(run);
 
   assert.equal(actual.run_outcome, "UNAVAILABLE");
-  assert.equal(actual.conditions[0]?.unavailable_reason, "timeout");
+  assert.equal(actual.results[0]?.unavailable_reason, "timeout");
   assert.equal(run.status, 2);
-  assert.match(run.stderr, /checker "slow" exited but left stdout or stderr open/);
+  assert.match(
+    run.stderr,
+    /checker "slow\\u000a\\u001b\\u202e" exited but left stdout or stderr open/,
+  );
+  assert.doesNotMatch(run.stderr, /\u001b|\u202e/);
   assert.ok(elapsed < 1_500, `CLI timeout took ${String(elapsed)}ms`);
 });
 
@@ -260,7 +371,7 @@ criteria:
   const actual = report(run);
 
   assert.equal(actual.run_outcome, "UNAVAILABLE");
-  assert.equal(actual.conditions[0]?.unavailable_reason, "spawn_failed");
+  assert.equal(actual.results[0]?.unavailable_reason, "spawn_failed");
   assert.match(run.stderr, /exit-criteria: cannot start/);
   assert.match(run.stderr, /ERR_INVALID_ARG_VALUE/);
   assert.match(run.stderr, /args\[0\].*null bytes/);
@@ -279,8 +390,8 @@ criteria:
   const actual = report(run);
 
   assert.equal(actual.run_outcome, "UNAVAILABLE");
-  assert.equal(actual.conditions[0]?.unavailable_reason, "terminated_by_signal");
-  assert.equal(actual.conditions[0]?.exit_code, undefined);
+  assert.equal(actual.results[0]?.unavailable_reason, "terminated_by_signal");
+  assert.equal(actual.results[0]?.exit_code, undefined);
   assert.equal(run.status, 2);
 });
 
@@ -309,7 +420,11 @@ criteria:
     [cli, "check", "--config", "exit-criteria.yml", "--repo-root", root, "--json"],
     { stdio: ["ignore", "pipe", "pipe"] },
   );
-  running.stdout.resume();
+  let stdout = "";
+  running.stdout.setEncoding("utf8");
+  running.stdout.on("data", (chunk: string) => {
+    stdout += chunk;
+  });
   running.stderr.resume();
 
   await waitUntil(() => existsSync(pidFile), "checker did not start");
@@ -322,6 +437,7 @@ criteria:
 
   assert.equal(termination.code, null);
   assert.equal(termination.signal, "SIGINT");
+  assert.equal(stdout, "");
   await waitUntil(() => {
     try {
       process.kill(checkerPid, 0);
