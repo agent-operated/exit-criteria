@@ -1,58 +1,137 @@
 # Exit Criteria
 
-> **The agent proposes completion. Exit criteria decide.**
+> **Replace an AI's “done” with executed check results.**
 
-> [!WARNING]
-> **Nothing is implemented yet.** This repository currently holds a license, this
-> README, and an intent. There is no package to install and no command to run.
+Exit Criteria is a small, tool-neutral acceptance gate. Put the checks required
+to call an artifact complete in one file, run one command, and receive the same
+`PASS`, `FAIL`, or `UNAVAILABLE` report locally, in CI, or from an agent.
 
-## What this is
+It does not replace test runners, spreadsheet validators, PDF inspectors, or
+other domain tools. It runs those tools through one manifest and gives their
+results one machine-readable shape.
 
-A coding agent can tell you it is finished. It cannot settle the question, because
-the thing being judged and the thing judging would be the same system.
+Reusable domain criteria and checker assets belong in separate **criteria
+profile** repositories. The core does not discover, download, install, merge,
+or trust profiles. A caller selects and pins a profile, then supplies a flat
+local manifest to Exit Criteria.
 
-*Exit criteria* is the standard term for the conditions that must hold before an
-activity can be declared complete. The idea is not new. What is missing is that
-these conditions are usually prose — read once, agreed to vaguely, and never
-mechanically checked.
+## Example
 
-This project makes them executable:
+```yaml
+version: 1
+criteria:
+  workbook_opens:
+    text: The workbook opens successfully
+    argv: ["python", "checks/workbook_opens.py", "report.xlsx"]
 
-- the conditions are fixed before the work starts
-- the agent may submit a candidate and repair it as often as needed
-- **whether the conditions hold is decided by a machine, never by the agent**
-- what was actually observed is recorded
-
-## Why it matters
-
-The loop this removes:
-
-```text
-"Done."  →  "It doesn't run."  →  "Done."  →  "Still doesn't run."  →  "Done."
+  totals_match:
+    text: Report totals match the source data
+    argv: ["python", "checks/totals_match.py", "report.xlsx", "source.csv"]
+    timeout_seconds: 60
 ```
 
-Every turn in that loop costs a human's attention. Deciding the conditions once,
-up front, costs it exactly once.
+```console
+$ exit-criteria check
+config: sha256:0c8d...
+PASS        totals_match  (exit 0)
+            Report totals match the source data
+PASS        workbook_opens  (exit 0)
+            The workbook opens successfully
 
-## What it will not do
+run: PASS
+```
 
-- It will not judge whether your criteria are good ones
-- It will not prove the software is correct
-- It will not ask a language model to decide pass or fail
+Use `--json` for automation:
 
-If the criteria are weak, passing them means very little. That limit is real and
-will stay documented.
+```console
+exit-criteria check --json
+```
+
+The built CLI also accepts `--config PATH`, `--repo-root PATH`, `-h|--help`, and
+`-v|--version`. Commands are always argv arrays and run with `shell: false`;
+shell command strings are not accepted.
+
+## Supported platforms
+
+The initial release supports macOS and Linux. Windows is not supported. The CLI
+does not block execution on Windows, but Windows behavior is outside the
+supported contract.
+
+## Outcomes
+
+| Outcome | Exit code | Meaning |
+|---|---:|---|
+| `PASS` | 0 | Every declared criterion passed |
+| `FAIL` | 1 | At least one criterion ran and failed, and none was unavailable |
+| `UNAVAILABLE` | 2 | A check could not run, timed out, or the configuration could not be evaluated |
+
+An empty criteria set is invalid and never passes. With `--json`, handled
+configuration errors and unavailable checks are returned as a versioned JSON
+report rather than disappearing into an empty success.
+
+A checker must stay in the foreground until its work and child processes are
+finished. On supported platforms, Exit Criteria manages only the directly
+started process. If a checker violates this contract and leaves a background
+process holding stdout or stderr, Exit Criteria closes its pipe ends and
+returns `UNAVAILABLE` at `timeout_seconds`; it does not supervise or terminate
+the descendant process tree.
+
+## Configuration identity
+
+Every valid report includes `config_digest` in `sha256:<lowercase hex>` form.
+It identifies the effective configuration that was actually evaluated,
+including criterion text, argv, working directory, timeout, and expanded
+defaults. YAML comments, whitespace, key order, and explicit default values do
+not change it.
+
+The digest lets a caller compare reports or pin an expected configuration. Exit
+Criteria does not store or compare previous digests itself.
+
+The digest does not prove that criteria were fixed before work began. When that
+policy is required, the caller records the expected digest before work and
+compares it with the digest in the report.
+
+## Responsibility boundary
+
+Exit Criteria evaluates the criteria it is given. The caller owns their
+approval, storage, enforcement, and any policy that decides which digest is
+trusted. The core has no runtime dependency on Git, GitHub, an issue tracker,
+CI, or a language model.
+
+The core is deliberately limited to parsing one flat local manifest, running
+direct foreground commands, aggregating outcomes, and returning a report. It
+does not contain domain profiles, a registry, profile installation or
+composition, workflow state, remediation, artifact storage, an HTTP service,
+MCP, or a plugin loader. Features at those layers belong in caller-owned tools,
+profile repositories, or optional adapters. See [DESIGN.md](DESIGN.md) for the
+boundary that must be changed before any such capability enters core.
+
+The configuration can run arbitrary executables available to the process.
+`shell: false` prevents shell-string interpretation; it does not sandbox a
+trusted argv array. Do not run an untrusted criteria file.
+
+The repository-root check for `cwd` is lexical. It rejects paths that escape
+through `..`, but it does not resolve symlinks. A symlink inside the repository
+can therefore select a working directory outside it. This check is not a
+sandbox or filesystem-isolation boundary.
+
+Passing means only that the declared criteria passed. Weak or incomplete
+criteria produce weak assurance, and an agent may optimize what is measured at
+the expense of what is not. Exit Criteria does not prove that an artifact is
+correct, and it does not prove that an agent actually invoked the CLI. A caller
+such as CI can require the report when enforcement is needed. A report also
+does not identify the artifact bytes it evaluated; the caller must bind the
+report to an artifact or revision when that identity matters.
 
 ## Status
 
-| | |
-|---|---|
-| Implementation | none |
-| npm package | `exit-criteria` — unregistered, not published |
-| License | MIT |
+The CLI is implemented in this repository but the npm package is not published.
+Build and run it locally with:
 
-The intended first command is a zero-config check against a base branch. It does
-not exist yet, and `npx exit-criteria` will not resolve to anything.
+```console
+npm run build
+node dist/src/cli.js check
+```
 
 ## License
 
@@ -62,58 +141,110 @@ not exist yet, and `npx exit-criteria` will not resolve to anything.
 
 # Exit Criteria（日本語）
 
-> **agentは完了を提案する。決めるのは Exit Criteria。**
+> **AIの「完成しました」を、実行された検査結果に置き換える。**
 
-> [!WARNING]
-> **まだ何も実装されていません。** 現在このrepositoryにあるのは、license、このREADME、
-> そして意図だけです。installできるpackageも、実行できるcommandもありません。
+Exit Criteriaは、特定のagentや成果物に依存しない小さなacceptance gateです。
+成果物を完了と呼ぶために必要な検査を一つのfileへ書き、一つのcommandで実行すると、
+local、CI、agentのどこからでも同じ`PASS`、`FAIL`、`UNAVAILABLE`のreportを得られます。
 
-## これは何か
+test runner、Excel検査、PDF検査などを置き換えるものではありません。領域ごとの既存の
+検査toolを一つのmanifestから実行し、結果を同じ機械可読形式へまとめます。
 
-coding agentは「終わりました」と言えます。しかしそれを確定させることはできません。
-判定される対象と判定する主体が、同じ仕組みだからです。
+再利用可能なdomain criteriaとchecker資産は、coreとは別の**criteria profile** repositoryが
+所有します。coreはprofileを検索、download、install、merge、trustしません。呼び出し側が
+profileを選択してversionを固定し、flatなlocal manifestとしてExit Criteriaへ渡します。
 
-*exit criteria*（終了条件）は、ある作業を完了と宣言するために満たされていなければ
-ならない条件を指す既存の用語です。考え方自体は新しくありません。足りていないのは、
-その条件がたいてい散文で書かれ、一度読まれ、なんとなく合意され、機械的に確認され
-ないまま終わることです。
+## 例
 
-このプロジェクトは、それを実行可能にします。
+```yaml
+version: 1
+criteria:
+  workbook_opens:
+    text: Excel fileが正常に開く
+    argv: ["python", "checks/workbook_opens.py", "report.xlsx"]
 
-- 条件は作業を始める前に固定する
-- agentは候補を提出でき、何度でも直せる
-- **条件が成立したかどうかは機械が決める。agentは決めない**
-- 実際に何を観測したかを記録する
-
-## なぜ必要か
-
-なくしたいのは、この往復です。
-
-```text
-「完了しました」→「動かないんだけど」→「完了しました」→「まだ動かない」→「完了しました」
+  totals_match:
+    text: 集計値が元dataと一致する
+    argv: ["python", "checks/totals_match.py", "report.xlsx", "source.csv"]
+    timeout_seconds: 60
 ```
 
-この往復は毎回、人間の注意を消費します。条件を先に一度決めておけば、消費は一度で済みます。
+```console
+exit-criteria check
+exit-criteria check --json
+```
 
-## しないこと
+CLIは`--config PATH`、`--repo-root PATH`、`-h|--help`、`-v|--version`も受け付けます。
+commandは必ずargv配列で指定し、`shell: false`で実行します。shell command文字列は
+受け付けません。
 
-- 条件そのものが良いかどうかは判定しません
-- ソフトウェアが正しいことは証明しません
-- 合否を言語モデルに尋ねることはしません
+## 対応OS
 
-条件が甘ければ、通っても意味はほとんどありません。この限界は実在するので、
-今後も文書に残し続けます。
+初期releaseの対応OSはmacOSとLinuxです。Windowsは未対応です。CLIはWindowsでの実行自体を
+拒否しませんが、Windowsでの挙動は動作保証の対象外です。
+
+## 判定
+
+| outcome | exit code | 意味 |
+|---|---:|---|
+| `PASS` | 0 | 宣言された全criteriaが成功した |
+| `FAIL` | 1 | 一件以上が失敗し、`UNAVAILABLE`はなかった |
+| `UNAVAILABLE` | 2 | 起動不能、timeout、または設定不備により完全な判定ができなかった |
+
+criteriaが0件の設定は不正であり、成功にはなりません。`--json`指定時は、扱える設定
+errorや検査不能もversion付きJSON reportとして返します。
+
+checkerは、自身の作業と子processが完了するまでforegroundに残る必要があります。対応OSで
+Exit Criteriaが管理するのは、直接起動したprocessだけです。checkerがこのcontractに
+違反して背景processにstdoutまたはstderrを保持させた場合、Exit Criteriaは
+`timeout_seconds`でpipeを閉じて`UNAVAILABLE`を返しますが、子孫processの終了は管理しません。
+
+## 評価した設定の識別
+
+有効なreportには`sha256:<lowercase hex>`形式の`config_digest`が入ります。これは、
+criterionの文章、argv、作業directory、timeout、展開済み既定値を含む、実際に評価した
+設定を識別します。YAMLのcomment、空白、key順、既定値を明記したかどうかでは変わりません。
+
+呼び出し側はdigestを使って過去reportとの比較や期待する設定の固定ができます。
+Exit Criteria自身は、過去digestの保存や比較を行いません。
+
+digestは、criteriaが作業前に固定されていたことを証明しません。そのpolicyが必要な場合は、
+呼び出し側が作業前に期待するdigestを記録し、reportのdigestと比較します。
+
+## 責任の境界
+
+Exit Criteriaは、与えられたcriteriaを評価します。criteriaの承認、保存、実行強制、
+どのdigestを信頼するかは呼び出し側が担います。coreはGit、GitHub、Issue tracker、CI、
+言語モデルをruntime要件にしません。
+
+coreは、一つのflatなlocal manifestのparse、直接foreground commandの実行、outcome集約、
+report返却だけに限定します。domain profile、registry、profileのinstallや合成、workflow
+state、修復、artifact保存、HTTP service、MCP、plugin loaderは持ちません。それらは呼び出し側、
+profile repository、または任意adapterが担います。この境界を越える実装より先に変更すべき
+設計は[DESIGN.md](DESIGN.md)にあります。
+
+設定には任意の実行fileを指定できます。`shell: false`はshell文字列の解釈を防ぎますが、
+argvをsandboxへ閉じ込めるものではありません。信頼できないcriteria fileを実行しないでください。
+
+`cwd`のrepository root検査は字句的です。`..`によるroot外への脱出は拒否しますが、symlinkの
+実体は解決しません。repository内のsymlinkがroot外を指す場合、checkerはroot外で実行され得ます。
+この検査はsandboxまたはfilesystem isolationの境界ではありません。
+
+`PASS`が保証するのは、宣言されたcriteriaが成功したことだけです。criteriaが弱い、または
+不足していれば保証も弱くなります。agentは測定対象だけを満たし、対象外を犠牲にすることも
+できます。Exit Criteriaは成果物の正しさや、agentが実際にCLIを起動したことを証明しません。
+また、report単体では、どの内容の成果物を評価したかを識別しません。その識別が必要な場合は、
+呼び出し側がreportを成果物またはrevisionへ結び付けます。強制が必要な場合は、CIなどの
+呼び出し側がreportを必須にします。
 
 ## 現在の状態
 
-| | |
-|---|---|
-| 実装 | なし |
-| npm package | `exit-criteria` — 未登録・未公開 |
-| ライセンス | MIT |
+CLIはこのrepositoryに実装されていますが、npm packageは未公開です。
 
-最初に実装する予定のcommandは、base branchに対する設定不要の検査です。まだ存在せず、
-`npx exit-criteria` は何も解決しません。
+```console
+npm run build
+node dist/src/cli.js check
+```
 
 ## ライセンス
 

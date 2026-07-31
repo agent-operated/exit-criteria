@@ -1,23 +1,21 @@
-# Binds each GTP done_condition id to an executable check.
-#
-# This file says HOW a condition is checked. It never says WHICH conditions
-# exist or what they mean — the GTP Contract on the issue owns that, and GTP
-# guarantees those cannot be redefined once posted.
-#
-# Commands are argv arrays, never shell strings.
-
+# The checks required before this repository can call a candidate complete.
+# This file may run arbitrary commands. Review it before executing it.
 version: 1
-issue: https://github.com/agent-operated/exit-criteria/issues/2
-
-checks:
+criteria:
   end_to_end:
+    text: The built CLI passes its real end-to-end tests without GTP or a network
     argv: ["node", "--test", "dist/test/e2e/end-to-end.test.js"]
 
-  unavailable_is_not_pass:
-    argv: ["node", "--test", "dist/test/unit/unavailable.test.js"]
+  typecheck:
+    text: TypeScript reports no type errors
+    argv: ["npm", "run", "typecheck"]
 
-  binding_required:
-    argv: ["node", "--test", "dist/test/unit/binding.test.js"]
-
-  decision_has_no_model:
-    argv: ["node", "--test", "dist/test/unit/no-model.test.js"]
+  unit_tests:
+    text: All unit tests pass
+    argv:
+      - node
+      - --test
+      - dist/test/unit/core-boundary.test.js
+      - dist/test/unit/criteria.test.js
+      - dist/test/unit/no-model.test.js
+      - dist/test/unit/unavailable.test.js

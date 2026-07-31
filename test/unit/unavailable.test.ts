@@ -2,25 +2,20 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { evaluate } from "../../src/application/evaluate.js";
-import { parseBindings } from "../../src/domain/bindings.js";
+import { parseCriteria, type Criterion } from "../../src/domain/criteria.js";
 import { runOutcome } from "../../src/domain/outcome.js";
-import type { ConditionsResult } from "../../src/infrastructure/gtp.js";
+import { runCheck } from "../../src/infrastructure/run-check.js";
 
-const bindings = parseBindings(`
+const criterion = parseCriteria(`
 version: 1
-issue: https://example.invalid/issues/1
-checks:
+criteria:
   a:
+    text: A
     argv: ["node", "-e", "process.exit(0)"]
-`);
-
-const oneCondition: ConditionsResult = {
-  kind: "acquired",
-  conditions: [{ conditionId: "a", text: "t", evidenceKind: "check" }],
-};
+`).criteria;
 
 test("a command that cannot be started is UNAVAILABLE, not PASS and not FAIL", async () => {
-  const results = await evaluate(oneCondition, bindings, process.cwd(), async () => ({
+  const results = await evaluate(criterion, process.cwd(), async () => ({
     kind: "unavailable",
     reason: "spawn_failed",
   }));
@@ -32,7 +27,7 @@ test("a command that cannot be started is UNAVAILABLE, not PASS and not FAIL", a
 });
 
 test("a timed out command is UNAVAILABLE", async () => {
-  const results = await evaluate(oneCondition, bindings, process.cwd(), async () => ({
+  const results = await evaluate(criterion, process.cwd(), async () => ({
     kind: "unavailable",
     reason: "timeout",
   }));
@@ -41,11 +36,47 @@ test("a timed out command is UNAVAILABLE", async () => {
   assert.equal(results[0]?.unavailableReason, "timeout");
 });
 
+test("the real command runner enforces timeout_seconds", async () => {
+  const timed: Criterion = {
+    id: "slow",
+    text: "The command finishes before its deadline",
+    argv: [process.execPath, "-e", "setTimeout(() => {}, 2000)"],
+    cwd: ".",
+    timeoutSeconds: 0.2,
+  };
+
+  const started = performance.now();
+  const result = await runCheck(timed, process.cwd());
+  const elapsed = performance.now() - started;
+
+  assert.deepEqual(result, {
+    kind: "unavailable",
+    reason: "timeout",
+  });
+  assert.ok(elapsed < 1_500, `timeout took ${String(elapsed)}ms`);
+});
+
+test("a command terminated by signal is UNAVAILABLE without a fake exit code", async () => {
+  const signaled = parseCriteria(`
+version: 1
+criteria:
+  signaled:
+    text: The command exits normally
+    argv: ["node", "-e", "process.kill(process.pid, 'SIGTERM')"]
+`).criteria[0];
+  assert.ok(signaled !== undefined);
+
+  assert.deepEqual(await runCheck(signaled, process.cwd()), {
+    kind: "unavailable",
+    reason: "terminated_by_signal",
+  });
+});
+
 test("an unavailable condition makes the whole run UNAVAILABLE", () => {
   assert.equal(
     runOutcome([
-      { conditionId: "a", outcome: "PASS", evidenceKind: "check", exitCode: 0 },
-      { conditionId: "b", outcome: "UNAVAILABLE", evidenceKind: "check" },
+      { conditionId: "a", text: "A", outcome: "PASS", exitCode: 0 },
+      { conditionId: "b", text: "B", outcome: "UNAVAILABLE" },
     ]),
     "UNAVAILABLE",
   );
@@ -53,12 +84,4 @@ test("an unavailable condition makes the whole run UNAVAILABLE", () => {
 
 test("a run that evaluated nothing is UNAVAILABLE, never PASS", () => {
   assert.equal(runOutcome([]), "UNAVAILABLE");
-});
-
-test("conditions cannot be acquired means no results, and no results never passes", async () => {
-  const unavailable: ConditionsResult = { kind: "unavailable", detail: "gtp exited 2" };
-  const results = await evaluate(unavailable, bindings, process.cwd());
-
-  assert.equal(results.length, 0);
-  assert.equal(runOutcome(results), "UNAVAILABLE");
 });
