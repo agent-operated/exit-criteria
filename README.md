@@ -123,15 +123,47 @@ such as CI can require the report when enforcement is needed. A report also
 does not identify the artifact bytes it evaluated; the caller must bind the
 report to an artifact or revision when that identity matters.
 
-## Status
+## Status and manual installation
 
-The CLI is implemented in this repository but the npm package is not published.
-Build and run it locally with:
+The CLI is implemented in this repository, but the npm package is private and
+not published. Do not use `npx` or assume a globally installed
+`exit-criteria` command. The source checkout requires Node.js 20 or later.
+
+Pin a reviewed full commit rather than a moving branch, install from the lock
+file, and verify the checkout:
 
 ```console
-npm run build
-node dist/src/cli.js check
+git clone https://github.com/agent-operated/exit-criteria.git /absolute/path/to/exit-criteria
+cd /absolute/path/to/exit-criteria
+git switch --detach REVIEWED_FULL_COMMIT_SHA
+git rev-parse HEAD
+npm ci
+npm test
 ```
+
+To evaluate a different project, invoke the built CLI by absolute path and make
+the target repository root explicit:
+
+```console
+mkdir -p /absolute/path/to/caller-evidence
+
+node /absolute/path/to/exit-criteria/dist/src/cli.js check \
+  --repo-root /absolute/path/to/target-project \
+  --config exit-criteria.yml \
+  --json \
+  > /absolute/path/to/caller-evidence/report.json \
+  2> /absolute/path/to/caller-evidence/checker.log
+```
+
+`--config` is resolved from `--repo-root`, and every relative criterion `cwd`
+is also resolved inside that root. Keep caller evidence outside the target: the
+shell creates redirected files before the check starts, which could otherwise
+change the artifact being evaluated. JSON reports use stdout; both stdout and
+stderr from criterion processes are forwarded to the CLI's stderr so they do
+not corrupt the JSON report.
+
+The caller must still record the expected `config_digest`, compare it with the
+report, and bind that report to the exact artifact or revision being accepted.
 
 ## License
 
@@ -237,14 +269,45 @@ argvをsandboxへ閉じ込めるものではありません。信頼できない
 呼び出し側がreportを成果物またはrevisionへ結び付けます。強制が必要な場合は、CIなどの
 呼び出し側がreportを必須にします。
 
-## 現在の状態
+## 現在の状態と手動導入
 
-CLIはこのrepositoryに実装されていますが、npm packageは未公開です。
+CLIはこのrepositoryに実装されていますが、npm packageはprivateで未公開です。`npx`や
+globalにinstall済みの`exit-criteria` commandを前提にしないでください。source checkoutには
+Node.js 20以上が必要です。
+
+moving branchではなくreview済みのfull commitへ固定し、lock fileからdependencyを導入して
+checkoutを検証します。
 
 ```console
-npm run build
-node dist/src/cli.js check
+git clone https://github.com/agent-operated/exit-criteria.git /absolute/path/to/exit-criteria
+cd /absolute/path/to/exit-criteria
+git switch --detach REVIEWED_FULL_COMMIT_SHA
+git rev-parse HEAD
+npm ci
+npm test
 ```
+
+別projectを評価する場合は、build済みCLIをabsolute pathで起動し、対象repository rootを
+明示します。
+
+```console
+mkdir -p /absolute/path/to/caller-evidence
+
+node /absolute/path/to/exit-criteria/dist/src/cli.js check \
+  --repo-root /absolute/path/to/target-project \
+  --config exit-criteria.yml \
+  --json \
+  > /absolute/path/to/caller-evidence/report.json \
+  2> /absolute/path/to/caller-evidence/checker.log
+```
+
+`--config`とcriterionのrelativeな`cwd`は、どちらも`--repo-root`を基準に解決されます。
+caller evidenceは対象projectの外へ置いてください。shellは検査開始前にredirect先fileを作るため、
+対象内へ置くと評価対象そのものを変える可能性があります。JSON reportはstdoutへ出ます。
+criterion processのstdoutとstderrは、JSONを壊さないよう両方ともCLIのstderrへ転送されます。
+
+callerは、期待する`config_digest`の事前記録とreportとの比較、およびreportと受理対象の
+artifactまたはrevisionとの結び付けを引き続き担います。
 
 ## ライセンス
 

@@ -83,14 +83,15 @@ test("the built CLI evaluates every declared criterion without GTP or a network"
   assert.equal(actual.conditions[1]?.exit_code, 0);
 });
 
-test("all passing criteria exit zero", () => {
+test("--repo-root selects another project for both config and checker cwd", () => {
   const fixture = temporaryConfig(`
 version: 1
 criteria:
   opens:
-    text: The artifact opens
-    argv: ["node", "-e", "process.exit(0)"]
+    text: The checker sees the target project artifact
+    argv: ["node", "-e", "require('node:fs').accessSync('artifact.txt')"]
 `);
+  writeFileSync(join(fixture.root, "artifact.txt"), "present\n", "utf8");
   const run = runCli(fixture.path, fixture.root);
 
   assert.equal(report(run).run_outcome, "PASS");
