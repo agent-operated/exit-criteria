@@ -4,7 +4,7 @@
 
 ## 採用した手段
 
-一つの`exit-criteria.yml`に`version: 1`と一件以上の`criteria` mappingを置く。各criterion IDは一度だけ現れ、同じmappingに`text`、非emptyの`argv`配列、任意の`cwd`、任意の`timeout_seconds`を持つ。`cwd`の既定値は`.`、`timeout_seconds`の既定値は`300`とし、指定値は`0`より大きく`2147483.647`以下とする。checkerは作業完了までforegroundに残り、background processを残さない。Exit Criteriaがtimeoutまたはinterruptで終了させるのは直接起動したprocessだけとし、platform固有のprocess tree管理は持たず、子孫processを管理しない。`issue`、`checks`、`evidence_kind`、profile reference、`include`、`extends`はこの設定形式に持たせない。
+一つの`exit-criteria.yml`に`version: 1`と一件以上の`criteria` mappingを置く。各criterion IDは一度だけ現れ、同じmappingに`text`、非emptyの`argv`配列、任意の`cwd`、任意の`timeout_seconds`を持つ。`cwd`の既定値は`.`とする。`cwd`はrepository rootを基準に字句的に正規化し、`..`によるroot外への脱出は拒否するが、root内判定ではsymlinkの実体を解決せず、sandboxまたはfilesystem isolationの境界にはしない。`timeout_seconds`の既定値は`300`とし、指定値は`0`より大きく`2147483.647`以下とする。checkerは作業完了までforegroundに残り、background processを残さない。Exit Criteriaがtimeoutまたはinterruptで終了させるのは直接起動したprocessだけとし、platform固有のprocess tree管理は持たず、子孫processを管理しない。`issue`、`checks`、`evidence_kind`、profile reference、`include`、`extends`はこの設定形式に持たせない。
 
 ## 変更履歴
 

@@ -110,6 +110,11 @@ The configuration can run arbitrary executables available to the process.
 `shell: false` prevents shell-string interpretation; it does not sandbox a
 trusted argv array. Do not run an untrusted criteria file.
 
+The repository-root check for `cwd` is lexical. It rejects paths that escape
+through `..`, but it does not resolve symlinks. A symlink inside the repository
+can therefore select a working directory outside it. This check is not a
+sandbox or filesystem-isolation boundary.
+
 Passing means only that the declared criteria passed. Weak or incomplete
 criteria produce weak assurance, and an agent may optimize what is measured at
 the expense of what is not. Exit Criteria does not prove that an artifact is
@@ -220,6 +225,10 @@ profile repository、または任意adapterが担います。この境界を越�
 
 設定には任意の実行fileを指定できます。`shell: false`はshell文字列の解釈を防ぎますが、
 argvをsandboxへ閉じ込めるものではありません。信頼できないcriteria fileを実行しないでください。
+
+`cwd`のrepository root検査は字句的です。`..`によるroot外への脱出は拒否しますが、symlinkの
+実体は解決しません。repository内のsymlinkがroot外を指す場合、checkerはroot外で実行され得ます。
+この検査はsandboxまたはfilesystem isolationの境界ではありません。
 
 `PASS`が保証するのは、宣言されたcriteriaが成功したことだけです。criteriaが弱い、または
 不足していれば保証も弱くなります。agentは測定対象だけを満たし、対象外を犠牲にすることも

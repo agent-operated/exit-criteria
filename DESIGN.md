@@ -97,6 +97,10 @@ process tree、container、job object、daemon lifecycleは管理しない。che
 違反してpipeを保持しても、coreはtimeoutでpipeを閉じて`UNAVAILABLE`を返すが、子孫processの
 終了は保証しない。この境界は対応OSで共通であり、platform固有のprocess tree管理は持たない。
 
+`cwd`はrepository rootを基準に字句的に正規化し、`..`でroot外へ出るpathを拒否する。
+root内判定ではsymlinkの実体を解決しないため、root内のsymlinkがroot外を指す場合、checkerは
+root外で実行され得る。この検査はsandboxまたはfilesystem isolationの境界ではない。
+
 ## Absolute core boundary
 
 AIによる加算バイアスを、将来の便利さ、一般性、対称性、拡張余地を理由にcoreへ持ち込まない。
