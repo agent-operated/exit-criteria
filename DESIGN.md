@@ -19,6 +19,11 @@ criteria profile repository ── 利用者が選択・固定 ──> local man
                                             result-only report
 ```
 
+## Supported platforms
+
+初期releaseの対応OSはmacOSとLinuxである。Windowsは未対応であり、Windowsでの挙動は
+contract対象外とする。coreはruntimeでOSを拒否せず、Windows専用分岐も持たない。
+
 ## Ownership
 
 `DESIGN.md`は現在のarchitectureを所有する。`gtp/decisions/`のDecision Recordは、後から
@@ -90,7 +95,7 @@ repositoryを作成できる。
 coreがtimeoutまたはinterruptで終了させるのは、直接起動したprocessだけである。
 process tree、container、job object、daemon lifecycleは管理しない。checkerがcontractに
 違反してpipeを保持しても、coreはtimeoutでpipeを閉じて`UNAVAILABLE`を返すが、子孫processの
-終了は保証しない。この境界は全platformで同じである。
+終了は保証しない。この境界は対応OSで共通であり、platform固有のprocess tree管理は持たない。
 
 ## Absolute core boundary
 

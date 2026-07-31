@@ -51,6 +51,12 @@ The built CLI also accepts `--config PATH`, `--repo-root PATH`, `-h|--help`, and
 `-v|--version`. Commands are always argv arrays and run with `shell: false`;
 shell command strings are not accepted.
 
+## Supported platforms
+
+The initial release supports macOS and Linux. Windows is not supported. The CLI
+does not block execution on Windows, but Windows behavior is outside the
+supported contract.
+
 ## Outcomes
 
 | Outcome | Exit code | Meaning |
@@ -64,11 +70,11 @@ configuration errors and unavailable checks are returned as a versioned JSON
 report rather than disappearing into an empty success.
 
 A checker must stay in the foreground until its work and child processes are
-finished. Exit Criteria manages only the directly started process on every
-platform. If a checker violates this contract and leaves a background process
-holding stdout or stderr, Exit Criteria closes its pipe ends and returns
-`UNAVAILABLE` at `timeout_seconds`; it does not supervise or terminate the
-descendant process tree.
+finished. On supported platforms, Exit Criteria manages only the directly
+started process. If a checker violates this contract and leaves a background
+process holding stdout or stderr, Exit Criteria closes its pipe ends and
+returns `UNAVAILABLE` at `timeout_seconds`; it does not supervise or terminate
+the descendant process tree.
 
 ## Configuration identity
 
@@ -167,6 +173,11 @@ CLIは`--config PATH`、`--repo-root PATH`、`-h|--help`、`-v|--version`も受�
 commandは必ずargv配列で指定し、`shell: false`で実行します。shell command文字列は
 受け付けません。
 
+## 対応OS
+
+初期releaseの対応OSはmacOSとLinuxです。Windowsは未対応です。CLIはWindowsでの実行自体を
+拒否しませんが、Windowsでの挙動は動作保証の対象外です。
+
 ## 判定
 
 | outcome | exit code | 意味 |
@@ -178,8 +189,8 @@ commandは必ずargv配列で指定し、`shell: false`で実行します。shel
 criteriaが0件の設定は不正であり、成功にはなりません。`--json`指定時は、扱える設定
 errorや検査不能もversion付きJSON reportとして返します。
 
-checkerは、自身の作業と子processが完了するまでforegroundに残る必要があります。Exit
-Criteriaが管理するのは、全platformで直接起動したprocessだけです。checkerがこのcontractに
+checkerは、自身の作業と子processが完了するまでforegroundに残る必要があります。対応OSで
+Exit Criteriaが管理するのは、直接起動したprocessだけです。checkerがこのcontractに
 違反して背景processにstdoutまたはstderrを保持させた場合、Exit Criteriaは
 `timeout_seconds`でpipeを閉じて`UNAVAILABLE`を返しますが、子孫processの終了は管理しません。
 
