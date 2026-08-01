@@ -93,8 +93,6 @@ Skillは、request、明示された制約、non-goalからmaterial claimを列�
 具体的なcriterionと`argv`、または実行可能な検査へできない理由を示すcoverage gapのどちらかへ
 対応付ける。claim列挙の網羅性は保証しない。coverage gapはcaller側の検査結果であり、coreの
 outcomeまたはreport fieldではない。
-coverageの表示形式は固定しないが、利用者由来のclaim、criterion ID、未検査理由は、別entryを
-偽装できない形でquoteまたはescapeする。
 
 criterionにはprojectに既存のtest、validator、linter、build command、domain toolを優先する。
 task固有checkerが必要ならinspection support fileとしてtarget artifact外へ作成できるが、一回のtaskで
@@ -102,8 +100,9 @@ task固有checkerが必要ならinspection support fileとしてtarget artifact�
 
 Skillがtask固有manifestを組み立てる際、具体的なcriterionと`argv`を一件も構成できない場合だけ、
 manifestを作らずcoreを起動しない。この場合はcoverage gapだけを返し、存在しないcore reportや
-`config_digest`を作らない。一件でも構成した後の起動不能、timeout、signal終了はcoreの
-`UNAVAILABLE`として扱い、coverage gapへ置き換えない。
+`config_digest`を作らない。manifestへ入れてcoreへ渡したcriterionについて、coreが返す
+`spawn_failed`、`timeout`、`terminated_by_signal`は`UNAVAILABLE`のまま返し、coverage gapへ
+置き換えない。coreを起動していないcallerまたはpackageのerrorからcore outcomeやreportを作らない。
 
 coreのoutcome、CLI exit code、report、`config_digest`を改変しない。coverage gapが一件でもあれば、
 実行済みcriteriaがすべて`PASS`でも、依頼全体を検証済みとは表現しない。coreの`PASS`を

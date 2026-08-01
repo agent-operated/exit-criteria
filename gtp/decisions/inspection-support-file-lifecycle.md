@@ -5,13 +5,15 @@ Exit Criteria Skillが検査に使うmanifestとcheckerを、どこから取得�
 ## 採用した手段
 
 Skillは、利用者が明示したmanifest、callerが決めたrepository root直下の既存`exit-criteria.yml`、
-Skillが生成するmanifestの順に使用する。明示されたmanifestと既存manifestは変更せず、実行前にpathと
-criterionの`argv`を利用者へ示す。既存manifestを実行してよいかはcallerとclientのtrustおよびpermission
-境界に従い、Exit Criteria独自の承認workflowを追加しない。
+Skillが生成するmanifestの順に使用する。明示されたmanifestと既存manifestは変更せず、実行前にpathを
+利用者へ示す。parseできる場合だけcriterionの`argv`も示す。emptyまたはinvalidでparseできないことを
+core呼び出しを止める理由にせず、そのmanifestを変更せずに渡す。既存manifestを実行してよいかはcallerと
+clientのtrustおよびpermission境界に従い、Exit Criteria独自の承認workflowを追加しない。
 
 filesystem上のtarget artifactを検査する場合、生成するmanifestとcheckerはtarget artifactおよび
-repository rootの外側にあるfreshなtemporary directoryだけへ置く。作成前にcanonicalなtemp parentと
-各保護対象のcanonical pathを比較する。temp parentがいずれかの保護対象と同一または内側なら作成を拒否する。
+repository rootの外側にあるfreshなtemporary directoryだけへ置く。この判断でcanonical pathとは、
+symlinkを解決したreal pathをいう。作成前に既存temp parentと各保護対象のcanonical pathを比較する。
+temp parentがいずれかの保護対象と同一または内側なら作成を拒否する。
 temp parentが保護対象のancestorであることだけでは拒否しない。作成後にchildのcanonical pathを取得する。
 childと各保護対象が同一またはいずれかが他方の内側なら拒否する。包含判定はpath segment単位で行う。
 Skillがchild内に作るentryをsymlinkにしない。安全な配置を確立できなければsupport fileもcore reportも
@@ -22,8 +24,9 @@ read-only、または検査と利用の間に競合してpathが変わらない�
 Skillがtask固有manifestを生成するとき、具体的なcriterionと`argv`を一件も構成できなければcoreを
 起動せず、coverage gapだけを返す。存在しないreportまたは`config_digest`は作らない。明示されたmanifest
 または対象の既存manifestがemptyまたはinvalidでもcoreへ渡し、coreのconfig-level `UNAVAILABLE`を
-維持する。具体的なcriterionと`argv`を構成した後はcoreへ渡し、起動不能、timeout、signal終了を
-coverage gapへ変換せず、coreの`UNAVAILABLE`として返す。
+維持する。具体的なcriterionと`argv`を表現できる場合、実行fileまたはdependencyが利用できないという
+preflight結果を理由にmanifestから省略せず、coverage gapへ変更しない。coreへ渡し、coreが返す
+`spawn_failed`、`timeout`、`terminated_by_signal`を`UNAVAILABLE`のまま返す。
 
 Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
 終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、
