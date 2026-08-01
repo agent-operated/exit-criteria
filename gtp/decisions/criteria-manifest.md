@@ -14,7 +14,7 @@ Unicodeを拒否する。commandはargvを`shell: false`で直接実行し、she
 
 `cwd`の既定値は`.`とする。`cwd`はbackslashもseparatorとして扱い、repository rootを基準に
 字句的に正規化する。absolute path、先頭のASCII英字と`:`、`..`によるroot外への脱出を
-全platformで拒否する。root内判定ではsymlinkの実体を解決せず、sandboxまたはfilesystem
+全対応OSで拒否する。root内判定ではsymlinkの実体を解決せず、sandboxまたはfilesystem
 isolationの境界にはしない。
 `timeout_seconds`の既定値は`300`とする。指定値は
 有限numberで、`0`より大きく`2147483.647`以下に限定する。
@@ -44,15 +44,15 @@ checkerは作業完了までforegroundに残り、background processを残さな
   明記した。
 - [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、criterion `cwd`だけが
   backslashをseparatorとして正規化するpath contractを明記した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、process treeの実測を受け、
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、process treeの実測を受け、
   `timeout_seconds`のplatform別終了境界を明記した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、coreのplatform分岐を廃止し、
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、coreのplatform分岐を廃止し、
   直接foreground processだけを管理するcontractへ変更した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、Node timerの上限を超えた値が
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、Node timerの上限を超えた値が
   即時timeoutへ反転する実測を受け、`timeout_seconds`の上限を固定した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、初期対応OSをmacOSとLinuxへ限定し、
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、初期対応OSをmacOSとLinuxへ限定し、
   process管理の記述を対応OSのcontractとして明確化した。
 - [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、不正なUTF-8をYAML parseと
   checker実行より前に拒否する境界を固定した。
 - [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、先頭のASCII英字と`:`を持つ
-  `cwd`を全platformで拒否するportable contractへ固定した。
+  `cwd`を全対応OSで拒否するportable contractへ固定した。

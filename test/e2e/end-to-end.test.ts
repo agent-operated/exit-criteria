@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -351,6 +351,43 @@ criteria:
 
   assert.equal(actual.unavailable_reason, "invalid_config");
   assert.equal(run.status, 2);
+});
+
+test("normalized cwd aliases cannot bypass drive-prefix rejection or start a checker", () => {
+  const examples = [
+    { cwd: "./C:checks", effectiveCwd: "C:checks" },
+    { cwd: "sub/../C:checks", effectiveCwd: "C:checks" },
+    { cwd: "./a:b", effectiveCwd: "a:b" },
+  ];
+
+  for (const { cwd, effectiveCwd } of examples) {
+    const root = mkdtempSync(join(tmpdir(), "exit-criteria-cwd-alias-"));
+    const marker = join(root, "checker-ran");
+    const script = `require('node:fs').writeFileSync(${JSON.stringify(marker)}, '')`;
+    mkdirSync(join(root, effectiveCwd), { recursive: true });
+    writeFileSync(
+      join(root, "exit-criteria.yml"),
+      `
+version: 1
+criteria:
+  aliased:
+    text: The checker stays blocked behind cwd validation
+    argv: ["node", "-e", ${JSON.stringify(script)}]
+    cwd: ${JSON.stringify(cwd)}
+`,
+      "utf8",
+    );
+
+    const run = runCli("exit-criteria.yml", root);
+    const actual = report(run);
+
+    assert.equal(run.status, 2);
+    assert.equal(actual.run_outcome, "UNAVAILABLE");
+    assert.equal(actual.unavailable_reason, "invalid_config");
+    assert.equal(actual.config_digest, undefined);
+    assert.deepEqual(actual.results, []);
+    assert.equal(existsSync(marker), false);
+  }
 });
 
 test("a checker that violates the foreground contract is bounded by timeout", () => {

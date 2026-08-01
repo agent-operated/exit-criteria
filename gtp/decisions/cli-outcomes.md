@@ -46,11 +46,11 @@ stdoutまたはstderrを保持している間は完走としない。`timeout_se
   optional field、closed reason、出力envelope、result順を固定した。
 - [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、人間向けtextを非version contractとし、
   動的な制御文字を一行へescapeする境界を固定した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、初見利用の検証を受け、
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、初見利用の検証を受け、
   criteria reportを伴うexit codeと情報表示commandのexit codeを区別した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、背景processが診断pipeを保持する
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、背景processが診断pipeを保持する
   checkerは、直接processのexit codeだけで`PASS`にしないことを明記した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、platform別process tree管理を廃止し、
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、platform別process tree管理を廃止し、
   foreground contract違反時もCLIだけをtimeoutで完了させる境界へ変更した。
-- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、情報表示を標準的なhelpおよび
+- [PR #8](https://github.com/agent-operated/exit-criteria/pull/8)で、情報表示を標準的なhelpおよび
   version flagへ限定し、未記載のbare subcommandを削除した。

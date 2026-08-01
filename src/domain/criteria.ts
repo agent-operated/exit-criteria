@@ -64,7 +64,13 @@ function normalizeCwd(value: string, criterionId: string): string {
     }
     segments.push(segment);
   }
-  return segments.join("/") || ".";
+  const normalized = segments.join("/") || ".";
+  if (/^[A-Za-z]:/.test(normalized)) {
+    throw new CriteriaError(
+      `criterion "${criterionId}" cwd must be relative to the repository root`,
+    );
+  }
+  return normalized;
 }
 
 function assertValidUnicode(value: string, location: string): void {

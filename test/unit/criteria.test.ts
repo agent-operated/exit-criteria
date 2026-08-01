@@ -173,8 +173,19 @@ criteria:
   assert.equal(config.criteria[0]?.cwd, "checks/nested");
 });
 
-test("criterion cwd rejects drive-prefixed forms on every platform", () => {
-  for (const cwd of ["C:/checks", "C:\\checks", "C:checks", "a:b"]) {
+test("criterion cwd rejects direct and normalized drive-prefixed forms on supported platforms", () => {
+  for (const cwd of [
+    "C:/checks",
+    "C:\\checks",
+    "C:checks",
+    "a:b",
+    "./C:checks",
+    "sub/../C:checks",
+    "./a:b",
+    ".\\C:checks",
+    "sub\\..\\C:checks",
+    ".\\a:b",
+  ]) {
     assert.throws(
       () =>
         parseCriteria(`
