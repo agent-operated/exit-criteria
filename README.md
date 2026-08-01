@@ -15,6 +15,41 @@ It does not replace test runners, spreadsheet validators, PDF inspectors, or
 other domain tools. It runs those tools through one manifest and gives their
 results one versioned machine-readable shape.
 
+## Manually validate a prerelease Skill
+
+A prerelease Skill requires macOS or Linux and Node.js 20 or later. It is a
+manual validation candidate, not a support claim for any client surface.
+
+Download the standalone Skill asset attached to the selected
+[GitHub release](https://github.com/agent-operated/exit-criteria/releases) and
+extract it in a temporary directory outside the target repository. Do not use
+the automatically generated GitHub `Source code` archives or copy
+`skills/exit-criteria` from `main`; those contain development source, not the
+bundled runner.
+
+For a first install, place the extracted directory in Codex `USER` scope. Stop
+if the destination already exists. For an update, replace the whole directory
+as one unit instead of merging files from two releases.
+
+```console
+mkdir -p "$HOME/.agents/skills" &&
+  test ! -e "$HOME/.agents/skills/exit-criteria" &&
+  mv /absolute/path/to/extracted/exit-criteria "$HOME/.agents/skills/exit-criteria" &&
+  node "$HOME/.agents/skills/exit-criteria/scripts/exit-criteria.mjs" --version
+```
+
+The version output must exactly match the selected release tag. Reload the
+client or start a fresh session, confirm that `exit-criteria` is discovered
+from `USER` scope, then explicitly select the Skill or invoke
+`$exit-criteria` where that surface supports it. Record the Skill release,
+client surface and version, OS, Node.js version, manual placement method, and
+observed result. Codex surfaces can be validated independently in any order;
+one result does not establish or prevent support for another surface.
+
+To uninstall, remove the single `$HOME/.agents/skills/exit-criteria` directory
+and reload the client. Caller-owned reports, manifests, and saved evidence are
+not installed runtime state and are not removed with the Skill.
+
 ## Example
 
 In the target project, create `exit-criteria.yml`:
@@ -277,6 +312,36 @@ local、CI、agentのどこからでも同じ`PASS`、`FAIL`、`UNAVAILABLE`のr
 
 test runner、Excel検査、PDF検査などを置き換えるものではありません。領域ごとの既存の
 検査toolを一つのmanifestから実行し、結果をversion付きの同じ機械可読形式へまとめます。
+
+## prerelease Skillを手動検証する
+
+prerelease SkillにはmacOSまたはLinuxとNode.js 20以上が必要です。これはmanual検証用の
+candidateであり、どのclient surfaceのsupport claimでもありません。
+
+選択した[GitHub release](https://github.com/agent-operated/exit-criteria/releases)に添付された
+standalone Skill assetを取得し、対象repository外のtemporary directoryへ展開します。GitHubが
+自動生成する`Source code` archiveや`main`の`skills/exit-criteria`は使用しません。これらは
+development sourceであり、bundled runnerを含むinstall assetではありません。
+
+初回installでは、展開したdirectory全体をCodexの`USER` scopeへ配置します。配置先が既に存在する
+場合は停止してください。updateでは、異なるreleaseのfileを混在させず、directory全体を一単位で
+置き換えます。
+
+```console
+mkdir -p "$HOME/.agents/skills" &&
+  test ! -e "$HOME/.agents/skills/exit-criteria" &&
+  mv /absolute/path/to/extracted/exit-criteria "$HOME/.agents/skills/exit-criteria" &&
+  node "$HOME/.agents/skills/exit-criteria/scripts/exit-criteria.mjs" --version
+```
+
+version出力が選択したrelease tagと完全一致することを確認します。clientをreloadするか新しいsessionを
+開始し、`exit-criteria`が`USER` scopeから認識されることを確認します。その後、Skillを明示的に選択するか、
+そのsurfaceが対応している場合は`$exit-criteria`で起動します。Skill release、client surfaceとversion、
+OS、Node.js version、manual配置方式、観測結果を記録します。Codex surfaceは任意の順で独立に検証でき、
+一つの結果が別surfaceのsupportを成立させたり、その検証を妨げたりすることはありません。
+
+uninstallでは、`$HOME/.agents/skills/exit-criteria` directory一つを削除してclientをreloadします。
+callerが保存したreport、manifest、evidenceはinstalled runtime stateではなく、Skillと一緒には削除されません。
 
 ## 例
 
