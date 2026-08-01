@@ -13,6 +13,7 @@
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc",
+    "build:skill": "node scripts/build-skill-release.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/test/unit/*.test.js dist/test/e2e/*.test.js",
     "exit-criteria": "node dist/src/cli.js check"
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/node": "26.1.1",
     "ajv": "8.20.0",
+    "esbuild": "0.28.1",
     "typescript": "7.0.2"
   }
 }

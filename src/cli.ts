@@ -1,19 +1,10 @@
 #!/usr/bin/env node
-import { isUtf8 } from "node:buffer";
-import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { resolve } from "node:path";
 import process from "node:process";
 
-import { evaluate } from "./application/evaluate.js";
-import { CriteriaError, parseCriteria } from "./domain/criteria.js";
-import { exitCodeFor, runOutcome } from "./domain/outcome.js";
-import {
-  formatJson,
-  formatText,
-  type Report,
-  type RunUnavailableReason,
-} from "./presentation/report.js";
+import { runCriteria } from "./application/run-criteria.js";
+import { exitCodeFor } from "./domain/outcome.js";
+import { formatJson, formatText, type Report } from "./presentation/report.js";
 import { escapeHumanValue } from "./presentation/human-value.js";
 
 interface Options {
@@ -95,15 +86,6 @@ function parseArgs(argv: readonly string[]): CliAction {
   return { kind: "check", options: { config, repoRoot, json } };
 }
 
-function unavailableReport(reason: RunUnavailableReason, message: string): Report {
-  return {
-    results: [],
-    runOutcome: "UNAVAILABLE",
-    unavailableReason: reason,
-    message,
-  };
-}
-
 function writeReport(report: Report, json: boolean): void {
   process.stdout.write((json ? formatJson(report) : formatText(report)) + "\n");
   process.exitCode = exitCodeFor(report.runOutcome);
@@ -120,48 +102,7 @@ async function main(): Promise<void> {
     return;
   }
   const options = action.options;
-  const configPath = resolve(options.repoRoot, options.config);
-
-  let sourceBytes: Buffer;
-  try {
-    sourceBytes = await readFile(configPath);
-  } catch (error) {
-    writeReport(
-      unavailableReport(
-        "config_unavailable",
-        error instanceof Error ? error.message : String(error),
-      ),
-      options.json,
-    );
-    return;
-  }
-
-  if (!isUtf8(sourceBytes)) {
-    writeReport(
-      unavailableReport("invalid_config", "criteria file is not valid UTF-8"),
-      options.json,
-    );
-    return;
-  }
-  const source = sourceBytes.toString("utf8");
-
-  let config;
-  try {
-    config = parseCriteria(source);
-  } catch (error) {
-    if (!(error instanceof CriteriaError)) {
-      throw error;
-    }
-    writeReport(unavailableReport("invalid_config", error.message), options.json);
-    return;
-  }
-
-  const results = await evaluate(config.criteria, options.repoRoot);
-  const report: Report = {
-    configDigest: config.configDigest,
-    results,
-    runOutcome: runOutcome(results),
-  };
+  const report = await runCriteria(options);
   writeReport(report, options.json);
 }
 
