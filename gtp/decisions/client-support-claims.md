@@ -37,4 +37,5 @@ requestとsurfaceの組合せを未対応とする。検査対象は送信前の
 
 - [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、manual配置をCodexの`USER` scopeへ
   限定し、`REPO` scopeをsupport対象外とした。
-- Codex CLIを最初のcandidateに固定する手段から、各Codex surfaceを任意の順で独立に検証する手段へ変更。
+- [PR #14](https://github.com/agent-operated/exit-criteria/pull/14)で、Codex CLIを最初のcandidateに
+  固定する手段から、各Codex surfaceを任意の順で独立に検証する手段へ変更。
