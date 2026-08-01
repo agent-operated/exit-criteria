@@ -14,5 +14,6 @@ artifact bytesまたはrevision、reportの真正性は含めない。これら�
 
 ## 変更履歴
 
-- 同じdigestでも実行環境や実行対象が変わり得る範囲を明示し、digestをartifact identityまたは
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、同じdigestでも実行環境や
+  実行対象が変わり得る範囲を明示し、digestをartifact identityまたは
   attestationとして扱わない境界を固定した。

@@ -173,6 +173,23 @@ criteria:
   assert.equal(config.criteria[0]?.cwd, "checks/nested");
 });
 
+test("criterion cwd rejects drive-prefixed forms on every platform", () => {
+  for (const cwd of ["C:/checks", "C:\\checks", "C:checks", "a:b"]) {
+    assert.throws(
+      () =>
+        parseCriteria(`
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+    cwd: ${JSON.stringify(cwd)}
+`),
+      /cwd must be relative to the repository root/,
+    );
+  }
+});
+
 test("duplicate criterion ids are rejected regardless of YAML parser defaults", () => {
   assert.throws(
     () =>

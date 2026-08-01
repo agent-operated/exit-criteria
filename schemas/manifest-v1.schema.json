@@ -3,7 +3,7 @@
   "$id": "https://raw.githubusercontent.com/agent-operated/exit-criteria/main/schemas/manifest-v1.schema.json",
   "title": "Exit Criteria manifest version 1",
   "description": "The JSON data model accepted by an Exit Criteria version 1 manifest.",
-  "$comment": "The runtime additionally rejects non-string YAML mapping keys and invalid Unicode. It treats slash and backslash as criterion cwd separators, then lexically constrains cwd to the repository root.",
+  "$comment": "The runtime first rejects invalid UTF-8 input bytes and additionally rejects non-string YAML mapping keys and invalid Unicode. It treats slash and backslash as criterion cwd separators, rejects a leading ASCII letter followed by a colon on every platform, then lexically constrains cwd to the repository root.",
   "type": "object",
   "required": ["version", "criteria"],
   "properties": {

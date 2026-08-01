@@ -22,6 +22,7 @@ interface CliReport {
   config_digest?: string;
   run_outcome: string;
   unavailable_reason?: string;
+  message?: string;
   results: {
     criterion_id: string;
     text: string;
@@ -168,6 +169,31 @@ test("invalid configuration still returns a machine-readable report and exits tw
   assert.equal(actual.unavailable_reason, "invalid_config");
   assert.equal(actual.config_digest, undefined);
   assert.equal(run.status, 2);
+});
+
+test("invalid UTF-8 is rejected before any checker can run", () => {
+  const root = mkdtempSync(join(tmpdir(), "exit-criteria-invalid-utf8-"));
+  const path = "exit-criteria.yml";
+  const source = Buffer.concat([
+    Buffer.from('version: 1\ncriteria:\n  invalid_utf8:\n    text: "A', "utf8"),
+    Buffer.from([0xff]),
+    Buffer.from(
+      'B"\n    argv: ["node", "-e", "require(\'node:fs\').writeFileSync(\'checker-ran\', \'\')"]\n',
+      "utf8",
+    ),
+  ]);
+  writeFileSync(join(root, path), source);
+
+  const run = runCli(path, root);
+  const actual = report(run);
+
+  assert.equal(run.status, 2);
+  assert.equal(actual.run_outcome, "UNAVAILABLE");
+  assert.equal(actual.unavailable_reason, "invalid_config");
+  assert.match(actual.message ?? "", /not valid UTF-8/);
+  assert.equal(actual.config_digest, undefined);
+  assert.deepEqual(actual.results, []);
+  assert.equal(existsSync(join(root, "checker-ran")), false);
 });
 
 test("numeric and quoted criterion ids cannot collide into a false PASS", () => {

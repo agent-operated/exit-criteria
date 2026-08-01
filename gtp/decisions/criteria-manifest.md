@@ -4,16 +4,18 @@
 
 ## 採用した手段
 
-一つのYAML manifestに`version: 1`と一件以上の`criteria` mappingを置く。document内の
-全mapping keyはstringに限定し、重複keyと未知fieldを拒否する。各criterion IDは一度だけ現れ、
+一つのYAML manifestに`version: 1`と一件以上の`criteria` mappingを置く。manifest fileのbyte列は
+正しいUTF-8に限定し、YAMLへparseする前に不正なUTF-8を拒否する。document内の全mapping keyは
+stringに限定し、重複keyと未知fieldを拒否する。各criterion IDは一度だけ現れ、
 空stringにしない。同じmappingに、空白だけでないstring `text`、非emptyのstring `argv`配列、
 任意の`cwd`、任意の`timeout_seconds`を持つ。ID、`text`、`argv`、`cwd`のstringは不正な
 Unicodeを拒否する。commandはargvを`shell: false`で直接実行し、shell command文字列を
 受け付けない。
 
 `cwd`の既定値は`.`とする。`cwd`はbackslashもseparatorとして扱い、repository rootを基準に
-字句的に正規化する。absolute pathと`..`によるroot外への脱出を拒否する。root内判定では
-symlinkの実体を解決せず、sandboxまたはfilesystem isolationの境界にはしない。
+字句的に正規化する。absolute path、先頭のASCII英字と`:`、`..`によるroot外への脱出を
+全platformで拒否する。root内判定ではsymlinkの実体を解決せず、sandboxまたはfilesystem
+isolationの境界にはしない。
 `timeout_seconds`の既定値は`300`とする。指定値は
 有限numberで、`0`より大きく`2147483.647`以下に限定する。
 
@@ -34,12 +36,23 @@ checkerは作業完了までforegroundに残り、background processを残さな
 
 ## 変更履歴
 
-- YAMLからobjectへ変換する前に全mapping keyをstringへ限定し、numeric keyとquoted string keyの
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、YAMLからobjectへ変換する前に
+  全mapping keyをstringへ限定し、numeric keyとquoted string keyの
   衝突によるcriterion上書きを拒否した。
-- config pathとcriterion `cwd`で異なるroot境界、およびcriterionが実行順に依存しないcontractを
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、config pathとcriterion `cwd`で
+  異なるroot境界、およびcriterionが実行順に依存しないcontractを
   明記した。
-- criterion `cwd`だけがbackslashをseparatorとして正規化するpath contractを明記した。
-- process treeの実測を受け、`timeout_seconds`のplatform別終了境界を明記した。
-- coreのplatform分岐を廃止し、直接foreground processだけを管理するcontractへ変更した。
-- Node timerの上限を超えた値が即時timeoutへ反転する実測を受け、`timeout_seconds`の上限を固定した。
-- 初期対応OSをmacOSとLinuxへ限定し、process管理の記述を対応OSのcontractとして明確化した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、criterion `cwd`だけが
+  backslashをseparatorとして正規化するpath contractを明記した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、process treeの実測を受け、
+  `timeout_seconds`のplatform別終了境界を明記した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、coreのplatform分岐を廃止し、
+  直接foreground processだけを管理するcontractへ変更した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、Node timerの上限を超えた値が
+  即時timeoutへ反転する実測を受け、`timeout_seconds`の上限を固定した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、初期対応OSをmacOSとLinuxへ限定し、
+  process管理の記述を対応OSのcontractとして明確化した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、不正なUTF-8をYAML parseと
+  checker実行より前に拒否する境界を固定した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、先頭のASCII英字と`:`を持つ
+  `cwd`を全platformで拒否するportable contractへ固定した。

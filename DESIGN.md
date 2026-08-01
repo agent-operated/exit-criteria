@@ -99,7 +99,8 @@ process tree、container、job object、daemon lifecycleは管理しない。che
 終了は保証しない。この境界は対応OSで共通であり、platform固有のprocess tree管理は持たない。
 
 `cwd`はbackslashもseparatorとして扱い、repository rootを基準に字句的に正規化する。
-absolute pathと、`..`でroot外へ出るpathを拒否する。
+absolute path、`C:checks`や`a:b`のような先頭のASCII英字と`:`、`..`でroot外へ出るpathを
+全対応OSで拒否する。
 root内判定ではsymlinkの実体を解決しないため、root内のsymlinkがroot外を指す場合、checkerは
 root外で実行され得る。この検査はsandboxまたはfilesystem isolationの境界ではない。
 

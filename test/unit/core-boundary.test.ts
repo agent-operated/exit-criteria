@@ -9,6 +9,7 @@ const repoRoot = resolve(here, "..", "..", "..");
 const sourceRoot = resolve(repoRoot, "src");
 
 const ALLOWED_NODE_IMPORTS = new Set([
+  "node:buffer",
   "node:child_process",
   "node:crypto",
   "node:fs/promises",

@@ -58,13 +58,16 @@ The input file is YAML with this contract:
 - `version` is the integer `1`.
 - `criteria` is a non-empty mapping. Each key is a unique, non-empty criterion
   ID. IDs and all other string values must contain valid Unicode.
+- The file's byte sequence must be valid UTF-8. Malformed input is rejected
+  before YAML parsing or checker execution.
 - Each criterion requires non-blank string `text` and a non-empty string array
   `argv`. Arguments are passed directly with `shell: false`; shell command
   strings are not accepted.
 - `cwd` is an optional non-empty relative string. Its default is `.`. It is
   normalized lexically against `--repo-root`, treating both `/` and `\` as path
-  separators; an absolute path or `..` escape is rejected. Symlinks are not
-  resolved, so this is not a sandbox or filesystem isolation boundary.
+  separators; an absolute path, a leading ASCII letter followed by `:` such as
+  `C:checks` or `a:b`, or a `..` escape is rejected on every platform. Symlinks
+  are not resolved, so this is not a sandbox or filesystem isolation boundary.
 - `timeout_seconds` is an optional finite number greater than `0` and no greater
   than `2147483.647`. Its default is `300`.
 
@@ -316,12 +319,14 @@ version付きの自動処理contractには`--json`を追加します。CLIは`--
 - `version`は整数`1`です。
 - `criteria`は空でないmappingです。各keyは一意で空でないcriterion IDです。
   IDを含む全string値は正しいUnicodeでなければなりません。
+- fileのbyte列は正しいUTF-8でなければなりません。不正な入力はYAMLのparseおよびcheckerの
+  実行より前に拒否します。
 - 各criterionには、空白だけではないstring `text`と、空でないstring配列`argv`が必要です。
   引数は`shell: false`で直接渡します。shell command文字列は受け付けません。
 - `cwd`は任意の空でないrelative stringで、既定値は`.`です。`--repo-root`を基準に
-  `/`と`\`をどちらもseparatorとして扱い、字句的に正規化します。absolute pathとroot外へ
-  出る`..`は拒否します。symlinkの実体は解決しないため、sandboxやfilesystem isolationの
-  境界ではありません。
+  `/`と`\`をどちらもseparatorとして扱い、字句的に正規化します。absolute path、`C:checks`や
+  `a:b`のような先頭のASCII英字と`:`、root外へ出る`..`は、全platformで拒否します。symlinkの
+  実体は解決しないため、sandboxやfilesystem isolationの境界ではありません。
 - `timeout_seconds`は任意の有限numberです。`0`より大きく`2147483.647`以下でなければ
   なりません。既定値は`300`です。
 

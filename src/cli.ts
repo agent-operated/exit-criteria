@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { isUtf8 } from "node:buffer";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
@@ -121,9 +122,9 @@ async function main(): Promise<void> {
   const options = action.options;
   const configPath = resolve(options.repoRoot, options.config);
 
-  let source: string;
+  let sourceBytes: Buffer;
   try {
-    source = await readFile(configPath, "utf8");
+    sourceBytes = await readFile(configPath);
   } catch (error) {
     writeReport(
       unavailableReport(
@@ -134,6 +135,15 @@ async function main(): Promise<void> {
     );
     return;
   }
+
+  if (!isUtf8(sourceBytes)) {
+    writeReport(
+      unavailableReport("invalid_config", "criteria file is not valid UTF-8"),
+      options.json,
+    );
+    return;
+  }
+  const source = sourceBytes.toString("utf8");
 
   let config;
   try {

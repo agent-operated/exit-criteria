@@ -39,11 +39,18 @@ stdoutまたはstderrを保持している間は完走としない。`timeout_se
 
 ## 変更履歴
 
-- report version 1の`conditions[].condition_id`はcriteria manifestの語彙と一致しなかった。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、report version 1の
+  `conditions[].condition_id`はcriteria manifestの語彙と一致しなかったため、
   対応release前にversion 2の`results[].criterion_id`へ修正し、version 1 aliasは残さなかった。
-- JSON reportの必須field、optional field、closed reason、出力envelope、result順を固定した。
-- 人間向けtextを非version contractとし、動的な制御文字を一行へescapeする境界を固定した。
-- 初見利用の検証を受け、criteria reportを伴うexit codeと情報表示commandのexit codeを区別した。
-- 背景processが診断pipeを保持するcheckerは、直接processのexit codeだけで`PASS`にしないことを明記した。
-- platform別process tree管理を廃止し、foreground contract違反時もCLIだけをtimeoutで完了させる境界へ変更した。
-- 情報表示を標準的なhelpおよびversion flagへ限定し、未記載のbare subcommandを削除した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、JSON reportの必須field、
+  optional field、closed reason、出力envelope、result順を固定した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、人間向けtextを非version contractとし、
+  動的な制御文字を一行へescapeする境界を固定した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、初見利用の検証を受け、
+  criteria reportを伴うexit codeと情報表示commandのexit codeを区別した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、背景processが診断pipeを保持する
+  checkerは、直接processのexit codeだけで`PASS`にしないことを明記した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、platform別process tree管理を廃止し、
+  foreground contract違反時もCLIだけをtimeoutで完了させる境界へ変更した。
+- [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、情報表示を標準的なhelpおよび
+  version flagへ限定し、未記載のbare subcommandを削除した。
