@@ -6,6 +6,10 @@ criteria:
     text: The built CLI passes its real end-to-end tests without GTP or a network
     argv: ["node", "--test", "dist/test/e2e/end-to-end.test.js"]
 
+  skill_release:
+    text: The standalone Skill bundle passes its release wiring tests without a network
+    argv: ["node", "--test", "dist/test/e2e/skill-release.test.js"]
+
   typecheck:
     text: TypeScript reports no type errors
     argv: ["npm", "run", "typecheck"]
@@ -19,5 +23,6 @@ criteria:
       - dist/test/unit/criteria.test.js
       - dist/test/unit/no-model.test.js
       - dist/test/unit/report.test.js
+      - dist/test/unit/run-criteria.test.js
       - dist/test/unit/schema.test.js
       - dist/test/unit/unavailable.test.js

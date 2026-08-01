@@ -1,0 +1,4 @@
+interface:
+  display_name: "Exit Criteria"
+  short_description: "Run acceptance checks before declaring work complete"
+  default_prompt: "Use $exit-criteria to verify this artifact against its material completion claims."

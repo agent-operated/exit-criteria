@@ -1,8 +1,9 @@
 # Exit Criteria
 
-> **Development preview:** source checkout only. The npm package is private and
-> unpublished, and there is no supported release or tag yet. Do not use `npx`
-> or assume a global `exit-criteria` command.
+> **Development preview:** the npm package is private and unpublished. GitHub
+> prerelease Skill assets, when present, are for manual validation only and do
+> not establish support for any client surface. Do not use `npx` or assume a
+> global `exit-criteria` command.
 
 > **Replace an AI's “done” with executed check results.**
 
@@ -264,9 +265,9 @@ the supported contract.
 
 # Exit Criteria（日本語）
 
-> **開発preview:** source checkoutからだけ利用できます。npm packageはprivateで
-> 未公開です。対応releaseやtagもまだありません。`npx`やglobalにinstall済みの
-> `exit-criteria` commandを前提にしないでください。
+> **開発preview:** npm packageはprivateで未公開です。GitHubにprereleaseのSkill
+> assetがある場合もmanual検証専用であり、どのclient surfaceのsupportも意味しません。
+> `npx`やglobalにinstall済みの`exit-criteria` commandを前提にしないでください。
 
 > **AIの「完成しました」を、実行された検査結果に置き換える。**
 

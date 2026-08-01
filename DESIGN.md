@@ -209,6 +209,7 @@ relativeな`--config`は`--repo-root`を基準に解決する。absolute pathと
 public outcomeは`PASS`、`FAIL`、`UNAVAILABLE`、criteria reportのexit codeは`0`、`1`、`2`である。
 新しいcommand、outcome、report field、manifest fieldはpublic contract変更として扱う。
 
-Exit Criteria Skillは設計として採用済みだが、まだ実装、配布、client surfaceごとの検証をしておらず、
-このcurrent public surfaceには含めない。対応するSkill release、client surface、client version、OS、
-Node.js version、manual配置方法のsupport claimは、後続の実client e2eが通過した組合せに限って追加する。
+Exit Criteria Skillのsourceとrelease buildは実装済みだが、このcore CLIのcurrent public surfaceには
+含めない。prerelease assetをmanual検証用に配布しても、それだけではclient supportを意味しない。
+対応するSkill release、client surface、client version、OS、Node.js version、manual配置方法の
+support claimは、後続の実client e2eが通過した組合せに限って追加する。
