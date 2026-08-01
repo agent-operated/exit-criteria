@@ -18,4 +18,6 @@ criteria:
       - dist/test/unit/core-boundary.test.js
       - dist/test/unit/criteria.test.js
       - dist/test/unit/no-model.test.js
+      - dist/test/unit/report.test.js
+      - dist/test/unit/schema.test.js
       - dist/test/unit/unavailable.test.js

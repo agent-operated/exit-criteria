@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { isUtf8 } from "node:buffer";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
@@ -13,6 +14,7 @@ import {
   type Report,
   type RunUnavailableReason,
 } from "./presentation/report.js";
+import { escapeHumanValue } from "./presentation/human-value.js";
 
 interface Options {
   readonly config: string;
@@ -28,7 +30,8 @@ type CliAction =
 const HELP = `Usage: exit-criteria check [options]
 
 Options:
-  --config PATH      criteria file (default: exit-criteria.yml)
+  --config PATH      criteria file; relative PATH resolves from --repo-root
+                     (default: exit-criteria.yml)
   --repo-root PATH   root used for config and criterion cwd (default: current directory)
   --json             write a versioned JSON report to stdout
   -h, --help         show this help
@@ -119,9 +122,9 @@ async function main(): Promise<void> {
   const options = action.options;
   const configPath = resolve(options.repoRoot, options.config);
 
-  let source: string;
+  let sourceBytes: Buffer;
   try {
-    source = await readFile(configPath, "utf8");
+    sourceBytes = await readFile(configPath);
   } catch (error) {
     writeReport(
       unavailableReport(
@@ -132,6 +135,15 @@ async function main(): Promise<void> {
     );
     return;
   }
+
+  if (!isUtf8(sourceBytes)) {
+    writeReport(
+      unavailableReport("invalid_config", "criteria file is not valid UTF-8"),
+      options.json,
+    );
+    return;
+  }
+  const source = sourceBytes.toString("utf8");
 
   let config;
   try {
@@ -154,6 +166,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  process.stderr.write(`ERROR ${error instanceof Error ? error.message : String(error)}\n`);
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`ERROR ${escapeHumanValue(message)}\n`);
   process.exitCode = 2;
 });

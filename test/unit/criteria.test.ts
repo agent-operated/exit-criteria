@@ -55,6 +55,24 @@ version: 1
   assert.equal(first.configDigest, second.configDigest);
 });
 
+test("criteria are normalized in ascending UTF-16 code unit order", () => {
+  const config = parseCriteria(`
+version: 1
+criteria:
+  "\uE000":
+    text: Private-use BMP criterion
+    argv: ["node", "bmp.js"]
+  "\uD83D\uDE00":
+    text: Supplementary criterion
+    argv: ["node", "supplementary.js"]
+`);
+
+  assert.deepEqual(
+    config.criteria.map((criterion) => criterion.id),
+    ["😀", "\uE000"],
+  );
+});
+
 test("every value that can change an evaluation changes the digest", () => {
   const digest = (body: string): string =>
     parseCriteria(`version: 1\ncriteria:\n  a:\n${body}`).configDigest;
@@ -142,6 +160,47 @@ criteria:
   );
 });
 
+test("criterion cwd treats backslashes as portable path separators", () => {
+  const config = parseCriteria(`
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+    cwd: 'checks\\nested'
+`);
+
+  assert.equal(config.criteria[0]?.cwd, "checks/nested");
+});
+
+test("criterion cwd rejects direct and normalized drive-prefixed forms on supported platforms", () => {
+  for (const cwd of [
+    "C:/checks",
+    "C:\\checks",
+    "C:checks",
+    "a:b",
+    "./C:checks",
+    "sub/../C:checks",
+    "./a:b",
+    ".\\C:checks",
+    "sub\\..\\C:checks",
+    ".\\a:b",
+  ]) {
+    assert.throws(
+      () =>
+        parseCriteria(`
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+    cwd: ${JSON.stringify(cwd)}
+`),
+      /cwd must be relative to the repository root/,
+    );
+  }
+});
+
 test("duplicate criterion ids are rejected regardless of YAML parser defaults", () => {
   assert.throws(
     () =>
@@ -157,6 +216,61 @@ criteria:
 `),
     CriteriaError,
   );
+});
+
+test("non-string mapping keys are rejected before YAML-to-object conversion", () => {
+  const examples = [
+    `
+1: ignored
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+`,
+    `
+true: ignored
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+`,
+    `
+? [compound, key]
+: ignored
+version: 1
+criteria:
+  a:
+    text: A
+    argv: ["node", "a.js"]
+`,
+    `
+version: 1
+criteria:
+  1:
+    text: Numeric
+    argv: ["node", "numeric.js"]
+  "1":
+    text: String
+    argv: ["node", "string.js"]
+`,
+    `
+version: 1
+criteria:
+  a:
+    1: ignored
+    text: A
+    argv: ["node", "a.js"]
+`,
+  ];
+
+  for (const source of examples) {
+    assert.throws(
+      () => parseCriteria(source),
+      /criteria file contains a non-string mapping key/,
+    );
+  }
 });
 
 test("an empty criteria mapping cannot pass vacuously", () => {

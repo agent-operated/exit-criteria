@@ -7,14 +7,14 @@
  */
 export type Outcome = "PASS" | "FAIL" | "UNAVAILABLE";
 
-/** Why a condition ended up UNAVAILABLE. Closed vocabulary; no free text. */
+/** Why a criterion ended up UNAVAILABLE. Closed vocabulary; no free text. */
 export type UnavailableReason =
   | "spawn_failed"
   | "terminated_by_signal"
   | "timeout";
 
-export interface ConditionResult {
-  readonly conditionId: string;
+export interface CriterionResult {
+  readonly criterionId: string;
   readonly text: string;
   readonly outcome: Outcome;
   /** Present only when outcome is UNAVAILABLE. */
@@ -24,10 +24,10 @@ export interface ConditionResult {
 }
 
 /**
- * A run passes only when every condition passed. UNAVAILABLE never counts
+ * A run passes only when every criterion passed. UNAVAILABLE never counts
  * toward success — an unknown is not a yes.
  */
-export function runOutcome(results: readonly ConditionResult[]): Outcome {
+export function runOutcome(results: readonly CriterionResult[]): Outcome {
   if (results.length === 0) {
     return "UNAVAILABLE";
   }

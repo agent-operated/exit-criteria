@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/agent-operated/exit-criteria/main/schemas/manifest-v1.schema.json",
+  "title": "Exit Criteria manifest version 1",
+  "description": "The JSON data model accepted by an Exit Criteria version 1 manifest.",
+  "$comment": "The runtime first rejects invalid UTF-8 input bytes and additionally rejects non-string YAML mapping keys and invalid Unicode. It treats slash and backslash as criterion cwd separators, rejects a leading ASCII letter followed by a colon on all supported platforms, then lexically constrains cwd to the repository root.",
+  "type": "object",
+  "required": ["version", "criteria"],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "criteria": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/criterion"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "criterion": {
+      "type": "object",
+      "required": ["text", "argv"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "default": "."
+        },
+        "timeout_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 2147483.647,
+          "default": 300
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

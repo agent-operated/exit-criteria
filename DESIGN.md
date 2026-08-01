@@ -6,7 +6,8 @@ Exit Criteriaは、AIの「完成しました」を、実行された検査結�
 acceptance gateである。
 
 coreは、一つのlocal manifestを読み、宣言されたforeground commandを実行し、
-`PASS`、`FAIL`、`UNAVAILABLE`と`config_digest`をtextまたはJSONで返す。
+`PASS`、`FAIL`、`UNAVAILABLE`をversion付きJSONまたは人間向けtextで返す。有効なmanifestの
+reportには`config_digest`も入れる。
 何を完成条件にするかは決めない。
 
 ```text
@@ -21,7 +22,7 @@ criteria profile repository ── 利用者が選択・固定 ──> local man
 
 ## Supported platforms
 
-初期releaseの対応OSはmacOSとLinuxである。Windowsは未対応であり、Windowsでの挙動は
+現在の対応contractはmacOSとLinuxに限定する。Windowsは未対応であり、Windowsでの挙動は
 contract対象外とする。coreはruntimeでOSを拒否せず、Windows専用分岐も持たない。
 
 ## Ownership
@@ -37,7 +38,7 @@ contract対象外とする。coreはruntimeでOSを拒否せず、Windows専用�
 - flatなcriteria manifestのschema、parse、normalize
 - manifestに明記された直接foreground processの実行
 - criterion outcomeの集約
-- versioned text/JSON reportとexit code
+- versioned JSON report、人間向けtext report、exit code
 - 実効manifestを識別する`config_digest`
 
 このrepository自身の`exit-criteria.yml`は、このprojectが自分を検査するためのlocal
@@ -97,9 +98,14 @@ process tree、container、job object、daemon lifecycleは管理しない。che
 違反してpipeを保持しても、coreはtimeoutでpipeを閉じて`UNAVAILABLE`を返すが、子孫processの
 終了は保証しない。この境界は対応OSで共通であり、platform固有のprocess tree管理は持たない。
 
-`cwd`はrepository rootを基準に字句的に正規化し、`..`でroot外へ出るpathを拒否する。
+`cwd`はbackslashもseparatorとして扱い、repository rootを基準に字句的に正規化する。
+absolute path、`C:checks`や`a:b`のような先頭のASCII英字と`:`、`..`でroot外へ出るpathを
+全対応OSで拒否する。
 root内判定ではsymlinkの実体を解決しないため、root内のsymlinkがroot外を指す場合、checkerは
 root外で実行され得る。この検査はsandboxまたはfilesystem isolationの境界ではない。
+
+各criterionは独立させ、実行順を通信、依存関係、優先度に使わせない。coreはcriterionの
+実行順をcontractにせず、schedule方式を変更できる。
 
 ## Absolute core boundary
 
@@ -140,7 +146,8 @@ MCP SDK、model provider SDKを参照しないことをarchitecture testで検�
 `FAIL`が示すのは、直接起動したcheckerがnumeric nonzero exit codeを返したことだけである。
 criterion自体の不適合と、checker内部のdependencyまたは実行環境の不備は区別しない。
 
-`config_digest`が識別するのは実効manifestであり、checker scriptのbytes、profile release、
+`config_digest`が識別するのは実効manifestである。repository root、config path、`PATH`を含む
+環境変数、解決後の実行file、checker scriptのbytes、Exit Criteriaのrevision、profile release、
 artifact、commit、reportの真正性は識別しない。criteriaが弱い場合、またはcheckerが誤っている
 場合、`PASS`の保証も弱い。
 
@@ -154,6 +161,10 @@ exit-criteria [-v|--version]
 
 `-h|--help`と`-v|--version`は`check`と一緒にも指定できる。bareな`help`と`version`は
 subcommandではない。
+
+relativeな`--config`は`--repo-root`を基準に解決する。absolute pathと`..` segmentを許可し、
+解決後のconfig pathはroot外になり得る。configはcaller所有の信頼済みmanifestであり、criterion
+`cwd`と違ってroot内へ制限せず、backslashをseparatorへ変換しない。この規則はsandbox境界ではない。
 
 public outcomeは`PASS`、`FAIL`、`UNAVAILABLE`、criteria reportのexit codeは`0`、`1`、`2`である。
 新しいcommand、outcome、report field、manifest fieldはpublic contract変更として扱う。

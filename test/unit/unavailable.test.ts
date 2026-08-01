@@ -72,11 +72,11 @@ criteria:
   });
 });
 
-test("an unavailable condition makes the whole run UNAVAILABLE", () => {
+test("an unavailable criterion makes the whole run UNAVAILABLE", () => {
   assert.equal(
     runOutcome([
-      { conditionId: "a", text: "A", outcome: "PASS", exitCode: 0 },
-      { conditionId: "b", text: "B", outcome: "UNAVAILABLE" },
+      { criterionId: "a", text: "A", outcome: "PASS", exitCode: 0 },
+      { criterionId: "b", text: "B", outcome: "UNAVAILABLE" },
     ]),
     "UNAVAILABLE",
   );

@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/agent-operated/exit-criteria/main/schemas/report-v2.schema.json",
+  "title": "Exit Criteria report version 2",
+  "description": "The JSON report emitted by Exit Criteria when --json is selected.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/evaluated_report"
+    },
+    {
+      "$ref": "#/$defs/config_unavailable_report"
+    }
+  ],
+  "$defs": {
+    "evaluated_report": {
+      "type": "object",
+      "required": ["tool", "report_version", "config_digest", "run_outcome", "results"],
+      "properties": {
+        "tool": {
+          "const": "exit-criteria"
+        },
+        "report_version": {
+          "const": 2
+        },
+        "config_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "run_outcome": {
+          "enum": ["PASS", "FAIL", "UNAVAILABLE"]
+        },
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/result"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "run_outcome": {
+                "const": "PASS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/pass_result"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "run_outcome": {
+                "const": "FAIL"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/pass_result"
+                    },
+                    {
+                      "$ref": "#/$defs/fail_result"
+                    }
+                  ]
+                },
+                "contains": {
+                  "$ref": "#/$defs/fail_result"
+                },
+                "minContains": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "run_outcome": {
+                "const": "UNAVAILABLE"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "contains": {
+                  "$ref": "#/$defs/unavailable_result"
+                },
+                "minContains": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "config_unavailable_report": {
+      "type": "object",
+      "required": [
+        "tool",
+        "report_version",
+        "run_outcome",
+        "results",
+        "unavailable_reason",
+        "message"
+      ],
+      "properties": {
+        "tool": {
+          "const": "exit-criteria"
+        },
+        "report_version": {
+          "const": 2
+        },
+        "run_outcome": {
+          "const": "UNAVAILABLE"
+        },
+        "results": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "unavailable_reason": {
+          "enum": ["config_unavailable", "invalid_config"]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "pass_result": {
+      "type": "object",
+      "required": ["criterion_id", "text", "outcome", "exit_code"],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "outcome": {
+          "const": "PASS"
+        },
+        "exit_code": {
+          "const": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "fail_result": {
+      "type": "object",
+      "required": ["criterion_id", "text", "outcome", "exit_code"],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "outcome": {
+          "const": "FAIL"
+        },
+        "exit_code": {
+          "type": "integer",
+          "not": {
+            "const": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "unavailable_result": {
+      "type": "object",
+      "required": ["criterion_id", "text", "outcome", "unavailable_reason"],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "outcome": {
+          "const": "UNAVAILABLE"
+        },
+        "unavailable_reason": {
+          "enum": ["spawn_failed", "timeout", "terminated_by_signal"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/pass_result"
+        },
+        {
+          "$ref": "#/$defs/fail_result"
+        },
+        {
+          "$ref": "#/$defs/unavailable_result"
+        }
+      ]
+    }
+  }
+}
