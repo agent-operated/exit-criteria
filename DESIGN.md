@@ -8,16 +8,20 @@ acceptance gateである。
 coreは、一つのlocal manifestを読み、宣言されたforeground commandを実行し、
 `PASS`、`FAIL`、`UNAVAILABLE`をversion付きJSONまたは人間向けtextで返す。有効なmanifestの
 reportには`config_digest`も入れる。
-何を完成条件にするかは決めない。
+coreは、何を完成条件にするかを決めない。
 
 ```text
-criteria profile repository ── 利用者が選択・固定 ──> local manifest
-                                                         │
-                                                         v
-                                         Exit Criteria core
-                                                         │
-                                                         v
-                                            result-only report
+user request + target artifact ──> optional Exit Criteria Skill ──┐
+                                         └──> coverage gaps       │
+selected criteria profile / external caller ──────────────────────┤
+                                                                  v
+                                                        local manifest
+                                                                  │
+                                                                  v
+                                                        Exit Criteria core
+                                                                  │
+                                                                  v
+                                                       result-only report
 ```
 
 ## Supported platforms
@@ -31,9 +35,9 @@ contract対象外とする。coreはruntimeでOSを拒否せず、Windows専用�
 変える影響が大きい採用手段とその変更履歴を所有する。両者の不一致は、片方を暗黙に優先して
 解釈せず、設計不整合として修正する。
 
-### Core repository
+### Core
 
-このrepositoryが所有するのは、次のcontractだけである。
+coreが所有するのは、次のcontractだけである。
 
 - flatなcriteria manifestのschema、parse、normalize
 - manifestに明記された直接foreground processの実行
@@ -72,12 +76,44 @@ repositoryを作成できる。
 呼び出し側は次を所有する。
 
 - profileの発見、取得、review、version固定、projectへの配置
-- project固有criteriaの承認、保存、変更管理
+- project固有criteriaの作成、選択、承認、保存、変更管理
 - checker dependencyと実行環境
 - 期待するdigestとの比較
 - reportの保存、真正性、実行強制
 - reportとartifact bytes、revision、taskの結び付け
 - `FAIL`または`UNAVAILABLE`後の修復と再実行
+
+### Exit Criteria Skill
+
+このcaller責務は定義済みだが、公式に配布できる標準caller実装はまだなかった。このrepositoryは、
+その標準実装としてExit Criteria Skillを採用する。Skillは交換・削除可能であり、Skillからcoreを
+一方向に呼び出す。coreはSkillへ依存せず、local manifestによる直接利用を維持する。
+
+Skillは、request、明示された制約、non-goalからmaterial claimを列挙し、列挙した各claimを
+具体的なcriterionと`argv`、または実行可能な検査へできない理由を示すcoverage gapのどちらかへ
+対応付ける。claim列挙の網羅性は保証しない。coverage gapはcaller側の検査結果であり、coreの
+outcomeまたはreport fieldではない。
+coverageの表示形式は固定しないが、利用者由来のclaim、criterion ID、未検査理由は、別entryを
+偽装できない形でquoteまたはescapeする。
+
+criterionにはprojectに既存のtest、validator、linter、build command、domain toolを優先する。
+task固有checkerが必要ならinspection support fileとしてtarget artifact外へ作成できるが、一回のtaskで
+必要になったcheckerをcore、Skill、またはcriteria profileの常設機能へ自動昇格しない。
+
+Skillがtask固有manifestを組み立てる際、具体的なcriterionと`argv`を一件も構成できない場合だけ、
+manifestを作らずcoreを起動しない。この場合はcoverage gapだけを返し、存在しないcore reportや
+`config_digest`を作らない。一件でも構成した後の起動不能、timeout、signal終了はcoreの
+`UNAVAILABLE`として扱い、coverage gapへ置き換えない。
+
+coreのoutcome、CLI exit code、report、`config_digest`を改変しない。coverage gapが一件でもあれば、
+実行済みcriteriaがすべて`PASS`でも、依頼全体を検証済みとは表現しない。coreの`PASS`を
+target artifact全体の正しさへ拡張しない。
+
+Skillはtarget artifactを生成、編集、または修復しない。response draftを検査対象にできるのは、検査結果を
+利用者が取得できる別のcarrierで返せるrequestとclient surfaceの組合せだけとする。別carrierが
+なければその組合せを未対応とする。draftの検査結果は、最終送信bytesとの同一性を保証しない。
+criteriaの承認、固定、保存、実行強制、修復、およびreportを信頼するための運用はSkillが担わず、
+引き続き利用者側のcaller責務とする。
 
 ## Checker contract
 
@@ -168,3 +204,7 @@ relativeな`--config`は`--repo-root`を基準に解決する。absolute pathと
 
 public outcomeは`PASS`、`FAIL`、`UNAVAILABLE`、criteria reportのexit codeは`0`、`1`、`2`である。
 新しいcommand、outcome、report field、manifest fieldはpublic contract変更として扱う。
+
+Exit Criteria Skillは設計として採用済みだが、まだ実装、配布、client surfaceごとの検証をしておらず、
+このcurrent public surfaceには含めない。対応するSkill release、client surface、client version、OS、
+Node.js version、manual配置方法のsupport claimは、後続の実client e2eが通過した組合せに限って追加する。

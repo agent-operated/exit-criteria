@@ -1,0 +1,31 @@
+## 未決定事項
+
+Exit Criteria Skillが検査に使うmanifestとcheckerを、どこから取得し、どこへ配置し、いつ削除するか。
+
+## 採用した手段
+
+Skillは、利用者が明示したmanifest、callerが決めたrepository root直下の既存`exit-criteria.yml`、
+Skillが生成するmanifestの順に使用する。明示されたmanifestと既存manifestは変更せず、実行前にpathと
+criterionの`argv`を利用者へ示す。既存manifestを実行してよいかはcallerとclientのtrustおよびpermission
+境界に従い、Exit Criteria独自の承認workflowを追加しない。
+
+filesystem上のtarget artifactを検査する場合、生成するmanifestとcheckerはtarget artifactおよび
+repository rootの外側にあるfreshなtemporary directoryだけへ置く。作成前にcanonicalなtemp parentと
+各保護対象のcanonical pathを比較する。temp parentがいずれかの保護対象と同一または内側なら作成を拒否する。
+temp parentが保護対象のancestorであることだけでは拒否しない。作成後にchildのcanonical pathを取得する。
+childと各保護対象が同一またはいずれかが他方の内側なら拒否する。包含判定はpath segment単位で行う。
+Skillがchild内に作るentryをsymlinkにしない。安全な配置を確立できなければsupport fileもcore reportも
+作らず、Skill側の未実行理由を返す。
+この検査は、安定したfilesystem上でsupport fileを対象へ混入させないためのものであり、sandbox、checkerの
+read-only、または検査と利用の間に競合してpathが変わらないことを保証しない。
+
+Skillがtask固有manifestを生成するとき、具体的なcriterionと`argv`を一件も構成できなければcoreを
+起動せず、coverage gapだけを返す。存在しないreportまたは`config_digest`は作らない。明示されたmanifest
+または対象の既存manifestがemptyまたはinvalidでもcoreへ渡し、coreのconfig-level `UNAVAILABLE`を
+維持する。具体的なcriterionと`argv`を構成した後はcoreへ渡し、起動不能、timeout、signal終了を
+coverage gapへ変換せず、coreの`UNAVAILABLE`として返す。
+
+Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
+終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、
+cleanup前にmanifestとcheckerをcaller-ownedの永続場所へ保存する。既定ではcache、履歴、再実行用stateを
+残さない。
