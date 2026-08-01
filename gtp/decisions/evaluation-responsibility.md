@@ -1,7 +1,22 @@
 ## 未決定事項
 
-Exit Criteriaが、完了条件の承認、固定、保存、実行強制まで担うか、与えられた条件の評価と報告だけを担うか。
+Exit Criteria coreと、このrepositoryが公式に配布するcaller実装が、criteriaの準備から評価後の受理までのどの責任を担うか。
 
 ## 採用した手段
 
-Exit Criteriaは、与えられたcriteriaのcommandを実行し、AIの「完成しました」を実行された検査結果へ置き換える。返すのはoutcome、exit code、設定digestを含むreportだけとし、checkerの診断はstderrへ流す。criteriaの作成、選択、承認、固定、保存、比較、実行強制、修復、およびreportを信頼するための運用は呼び出し側またはcriteria profileが担う。Exit CriteriaはGit、GitHub、Issue、pull request、CI、MCP、言語モデル、network serviceをruntime要件にしない。
+Exit Criteria coreは、与えられたcriteriaのcommandを実行する。既存contractに従うoutcome、CLI exit code、
+reportを返す。有効なmanifestを扱ったreportには`config_digest`を含め、checkerの診断はstderrへ流す。
+coreはcriteriaを作成または選択せず、結果を修復しない。
+
+このrepositoryが公式に配布するExit Criteria Skillは、交換・削除可能な標準caller実装とする。Skillは依頼から
+material claimを列挙し、各claimを具体的なcriterionまたはcoverage gapへ対応付ける。manifestの準備と
+必要なcore呼び出しも担う。criteriaの承認、固定、保存、比較、実行強制、修復、reportを信頼するための運用、
+およびreportと受理対象artifactの結び付けは、利用者または上位callerが担う。
+
+coreはGit、GitHub、Issue、pull request、CI、MCP、言語モデル、network serviceをruntime要件にしない。公式Skillの追加によってcoreの責任とruntime要件を広げない。
+
+## 変更履歴
+
+- [Issue #11](https://github.com/agent-operated/exit-criteria/issues/11)を受け、
+  [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、caller責務をcore外に置く判断を
+  維持したまま、このrepositoryが提供する交換・削除可能な標準caller実装としてSkillの責任範囲を追加。
