@@ -32,7 +32,8 @@ preflight結果を理由にmanifestから省略せず、coverage gapへ変更し
 core reportを取得した場合、Skillは、そのreportを`config_digest`が存在すればそれを含めて改変せずに返す。
 これとは別にcoverage gapと、reportに`config_digest`がある場合は、そのdigestが識別する実効manifest上で
 reportの`results`に対応するcriterion定義を返す。これらの返却情報だけで、削除済みcheckerを再構成できる
-とはclaimしない。
+とはclaimしない。Skillがこれらの返却carrierとしてfileを作る場合も、target artifactおよびrepository rootの
+外側へ置く。
 
 Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
 終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、
@@ -41,5 +42,5 @@ cleanup前にmanifestとcheckerをtarget artifactおよびrepository rootの外�
 
 ## 変更履歴
 
-- [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、opt-inの永続保存先もtarget artifactと
-  repository rootの外側へ限定した。
+- [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、返却用fileとopt-inの永続保存先を
+  target artifactおよびrepository rootの外側へ限定した。
