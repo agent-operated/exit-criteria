@@ -7,6 +7,9 @@ Exit Criteria Skillが、どのclient surfaceで動作すると公式に表明�
 target familyはCodexとし、最初に検証するcandidateはCodex CLIとする。support claimは実clientでの
 end-to-end testが通過した組合せに限り、Skill release、surface、client version、OS、Node.js version、
 およびmanualなSkill配置方式を明記する。具体的なversionはこのDecision Recordへ固定しない。
+Codex surfaceでは、release assetのSkill directoryを、repository間で共有される
+[公式の`USER` scope](https://learn.chatgpt.com/docs/build-skills)である`$HOME/.agents/skills`配下へ
+manual配置する。`REPO` scopeの`.agents/skills`への配置はsupport対象にしない。
 support claimを追加するclient surfaceごとのmanual配置先、Skill発見の確認方法、clientが提供する
 explicit invocation、およびsystem requirementはrepository rootの`README.md`へ記載する。
 system requirementは`SKILL.md`の`compatibility`にもmacOS、Linux、Node.js 20以上と記載するが、
@@ -26,3 +29,8 @@ optional metadataとして扱い、portableなSkill contractまたはsupport evi
 またはmetadataへ分離できる場合だけ対応する。分離できない場合、そのsurface全体ではなく、該当する
 requestとsurfaceの組合せを未対応とする。検査対象は送信前のdraftであり、最終送信bytesとの同一性は
 保証しない。
+
+## 変更履歴
+
+- [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、manual配置をCodexの`USER` scopeへ
+  限定し、`REPO` scopeをsupport対象外とした。

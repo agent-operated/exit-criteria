@@ -36,5 +36,10 @@ reportの`results`に対応するcriterion定義を返す。これらの返却�
 
 Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
 終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、
-cleanup前にmanifestとcheckerをcaller-ownedの永続場所へ保存する。既定ではcache、履歴、再実行用stateを
-残さない。
+cleanup前にmanifestとcheckerをtarget artifactおよびrepository rootの外側にあるcaller-ownedの永続場所へ
+保存する。既定ではcache、履歴、再実行用stateを残さない。
+
+## 変更履歴
+
+- [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、opt-inの永続保存先もtarget artifactと
+  repository rootの外側へ限定した。
