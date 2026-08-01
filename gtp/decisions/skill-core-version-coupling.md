@@ -5,9 +5,9 @@
 ## 採用した手段
 
 release時のGit tag文字列を加工せず、`SKILL.md`の`metadata.version`とbundled runnerへ埋め込むversionへ
-投影する。runnerはcoreを起動する前に同じSkill directoryの`SKILL.md`を読む。両者の文字列が完全一致する
-ことを検査する。不一致または`metadata.version`を読み取れない場合はpackage errorをstderrへ出して
-nonzeroで終了する。core outcome、report、`config_digest`は作らない。
+投影する。runnerはcoreを起動する前に、自身が属するSkill directory rootの`SKILL.md`を読む。両者の
+文字列が完全一致することを検査する。不一致または`metadata.version`を読み取れない場合はpackage errorを
+stderrへ出してnonzeroで終了する。core outcome、report、`config_digest`は作らない。
 
 この一致が示すのは、Skillとrunnerが同じdeclared release identityを名乗っていることだけである。
 両者が異なるidentityを宣言する組合せは拒否できるが、同じbuildから作られたこと、build provenance、

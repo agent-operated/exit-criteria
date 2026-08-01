@@ -17,5 +17,6 @@ coreはGit、GitHub、Issue、pull request、CI、MCP、言語モデル、networ
 
 ## 変更履歴
 
-- [Issue #11](https://github.com/agent-operated/exit-criteria/issues/11)を受け、caller責務をcore外に置く判断を
+- [Issue #11](https://github.com/agent-operated/exit-criteria/issues/11)を受け、
+  [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、caller責務をcore外に置く判断を
   維持したまま、このrepositoryが提供する交換・削除可能な標準caller実装としてSkillの責任範囲を追加。

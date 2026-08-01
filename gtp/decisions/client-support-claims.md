@@ -7,8 +7,10 @@ Exit Criteria Skillが、どのclient surfaceで動作すると公式に表明�
 target familyはCodexとし、最初に検証するcandidateはCodex CLIとする。support claimは実clientでの
 end-to-end testが通過した組合せに限り、Skill release、surface、client version、OS、Node.js version、
 およびmanualなSkill配置方式を明記する。具体的なversionはこのDecision Recordへ固定しない。
-`SKILL.md`の`compatibility`にはmacOS、Linux、Node.js 20以上の要件を記載するが、それだけで
-Codexの各surfaceを対応済みとは扱わない。
+support claimを追加するclient surfaceごとのmanual配置先、Skill発見の確認方法、clientが提供する
+explicit invocation、およびsystem requirementはrepository rootの`README.md`へ記載する。
+system requirementは`SKILL.md`の`compatibility`にもmacOS、Linux、Node.js 20以上と記載するが、
+これらの記載だけでCodexの各surfaceを対応済みとは扱わない。release noteは`README.md`を参照する。
 
 client別end-to-end testでは、文書化した配置先からのSkill発見とclientが提供するexplicit invocationを
 確認する。代表的なimplicit invocationと非invocationも確認する。さらに、post-install networkと

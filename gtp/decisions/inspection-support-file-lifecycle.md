@@ -1,6 +1,7 @@
 ## 未決定事項
 
-Exit Criteria Skillが検査に使うmanifestとcheckerを、どこから取得し、どこへ配置し、いつ削除するか。
+Exit Criteria Skillが検査に使うmanifestとcheckerを、どこから取得し、どこへ配置し、いつ削除し、
+利用者へ何を返すか。
 
 ## 採用した手段
 
@@ -27,6 +28,15 @@ Skillがtask固有manifestを生成するとき、具体的なcriterionと`argv`
 維持する。具体的なcriterionと`argv`を表現できる場合、実行fileまたはdependencyが利用できないという
 preflight結果を理由にmanifestから省略せず、coverage gapへ変更しない。coreへ渡し、coreが返す
 `spawn_failed`、`timeout`、`terminated_by_signal`を`UNAVAILABLE`のまま返す。
+
+core reportを取得した場合、Skillは、そのreportを`config_digest`が存在すればそれを含めて改変せずに返す。
+これとは別にcoverage gapと、reportの`results`に列挙されたcriteriaの実効定義を返す。criterionの
+実効定義は、`id`（`criteria` mappingのkey）、`text`、`argv`、既定値を展開して正規化した`cwd`、
+`timeout_seconds`とする。実行を完了したcriteriaと、実行を試みて`UNAVAILABLE`となったcriteriaの
+両方を含む。返す実効定義は、同じreportの`config_digest`が識別する正規化済みmanifestから取得した
+ものに限る。両者の対応を確立できなければ、core reportは改変せず、実効定義を返さずにSkill側のerrorを
+別に返す。存在しない`config_digest`は作らない。これらの返却情報だけで、削除済みcheckerを再構成できる
+とはclaimしない。
 
 Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
 終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、

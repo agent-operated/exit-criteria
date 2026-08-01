@@ -92,7 +92,8 @@ repositoryを作成できる。
 Skillは、request、明示された制約、non-goalからmaterial claimを列挙し、列挙した各claimを
 具体的なcriterionと`argv`、または実行可能な検査へできない理由を示すcoverage gapのどちらかへ
 対応付ける。claim列挙の網羅性は保証しない。coverage gapはcaller側の検査結果であり、coreの
-outcomeまたはreport fieldではない。
+outcomeまたはreport fieldではない。core reportとは別にSkillが返すcaller側outputのcarrierと形式は
+固定しないが、同じcarrierへ出す動的な値によってentryの境界を偽装できないようにする。
 
 criterionにはprojectに既存のtest、validator、linter、build command、domain toolを優先する。
 task固有checkerが必要ならinspection support fileとしてtarget artifact外へ作成できるが、一回のtaskで
@@ -103,6 +104,10 @@ manifestを作らずcoreを起動しない。この場合はcoverage gapだけ�
 `config_digest`を作らない。manifestへ入れてcoreへ渡したcriterionについて、coreが返す
 `spawn_failed`、`timeout`、`terminated_by_signal`は`UNAVAILABLE`のまま返し、coverage gapへ
 置き換えない。coreを起動していないcallerまたはpackageのerrorからcore outcomeやreportを作らない。
+
+core reportを取得した場合、Skillはreportを改変せず、存在する`config_digest`とともに返す。これとは
+別にcoverage gapと、reportの`results`に列挙され、同じreportの`config_digest`が識別するcriteriaの
+実効定義を利用者へ返す。これらの返却情報だけで、削除済みcheckerを再構成できるとはclaimしない。
 
 coreのoutcome、CLI exit code、report、`config_digest`を改変しない。coverage gapが一件でもあれば、
 実行済みcriteriaがすべて`PASS`でも、依頼全体を検証済みとは表現しない。coreの`PASS`を
