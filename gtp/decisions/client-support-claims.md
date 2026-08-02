@@ -37,8 +37,9 @@ requestとsurfaceの組合せを未対応とする。検査対象は送信前の
 
 ## 変更履歴
 
-- target familyをCodexだけからCodex、Claude Code、Cursorへ広げ、client-wide scopeの対応表を
-  `README.md`へ置く手段に変更した。対応表への掲載だけではsupport claimを成立させない。
+- [PR #15](https://github.com/agent-operated/exit-criteria/pull/15)で、target familyをCodexだけから
+  Codex、Claude Code、Cursorへ広げ、client-wide scopeの対応表を`README.md`へ置く手段に変更した。
+  対応表への掲載だけではsupport claimを成立させない。
 - [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、manual配置をCodexの`USER` scopeへ
   限定し、`REPO` scopeをsupport対象外とした。
 - [PR #14](https://github.com/agent-operated/exit-criteria/pull/14)で、Codex CLIを最初のcandidateに
