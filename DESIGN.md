@@ -2,8 +2,8 @@
 
 ## 製品の役割
 
-Exit Criteriaは、AIの「完成しました」を、実行された検査結果へ置き換える小さな
-acceptance gateである。
+Exit Criteriaは、成果物を変える前にacceptance criteriaを定義し、AIの「完成しました」を
+そのcriteriaに対する実行済み検査結果へ置き換える小さなacceptance gateである。
 
 coreは、一つのlocal manifestを読み、宣言されたforeground commandを実行し、
 `PASS`、`FAIL`、`UNAVAILABLE`をversion付きJSONまたは人間向けtextで返す。有効なmanifestの
@@ -11,17 +11,21 @@ reportには`config_digest`も入れる。
 coreは、何を完成条件にするかを決めない。
 
 ```text
-user request + target artifact ──> optional Exit Criteria Skill ──┐
-                                         └──> coverage gaps       │
-selected criteria profile / external caller ──────────────────────┤
-                                                                  v
-                                                        local manifest
-                                                                  │
-                                                                  v
-                                                        Exit Criteria core
-                                                                  │
-                                                                  v
-                                                       result-only report
+implementation request ──> optional Exit Criteria Skill planning stage
+                                      ├──> coverage gaps
+                                      └──> pre-work manifest + config_digest baseline
+                                                          │
+                                                          v
+                                                    target mutation
+                                                          │
+                                                          v
+completion claim ───────> optional Exit Criteria Skill verification stage
+                                                          │
+                                                          v
+                                                Exit Criteria core
+                                                          │
+                                                          v
+                                               result-only report
 ```
 
 ## Supported platforms
@@ -89,9 +93,19 @@ repositoryを作成できる。
 その標準実装としてExit Criteria Skillを採用する。Skillは交換・削除可能であり、Skillからcoreを
 一方向に呼び出す。coreはSkillへ依存せず、local manifestによる直接利用を維持する。
 
-Skillは、request、明示された制約、non-goalからmaterial claimを列挙し、列挙した各claimを
-具体的なcriterionと`argv`、または実行可能な検査へできない理由を示すcoverage gapのどちらかへ
-対応付ける。claim列挙の網羅性は保証しない。coverage gapはcaller側の検査結果であり、coreの
+Skillは二段階で動く。planning段階は、implementation planの作成時または最初のtarget mutation前に、
+request、明示された制約、non-goalからmaterial claimを列挙する。列挙した各claimを具体的なcriterionと
+`argv`、または実行可能な検査へできない理由を示すcoverage gapのどちらかへ対応付ける。実行可能な
+criteriaがあれば、`show-config`が返す実効定義と`config_digest`をpre-work baselineとして保持する。
+この段階ではcoreの`check`を実行せず、outcomeを予測しない。
+
+verification段階は、acceptance、completion、conformance、verificationの依頼時、および完成済みまたは
+利用可能という提示前に動く。pre-work baselineまたは明示的な変更後baselineがあれば、実行直前の
+`config_digest`との一致を確認してからcoreを呼び出す。一致しなければcoreを呼び出さず、caller-sideの
+configuration changeとして返す。baselineが存在しない既存targetもretrospective verificationとして
+検査できるが、criteriaが実装前に固定されていたことを示すものではない。
+
+claim列挙の網羅性は保証しない。coverage gapはcaller側の検査結果であり、coreの
 outcomeまたはreport fieldではない。core reportとは別にSkillが返すcaller側outputのcarrierと形式は
 固定しないが、同じcarrierへ出す動的な値によってentryの境界を偽装できないようにする。暗黙起動の
 通常のchatでは、利用者の言語でmaterial claimごとの結果と未確認点を平易に説明する。明示起動または
@@ -102,7 +116,8 @@ task固有checkerが必要ならinspection support fileとしてtarget artifact�
 必要になったcheckerをcore、Skill、またはcriteria profileの常設機能へ自動昇格しない。
 
 Skillがtask固有manifestを組み立てる際、具体的なcriterionと`argv`を一件も構成できない場合だけ、
-manifestを作らずcoreを起動しない。この場合はcoverage gapだけを返し、存在しないcore reportや
+manifestを作らずcoreを起動しない。planning段階でcoverage gapを記録し、verification段階では
+coverage gapだけを返す。存在しないcore reportや
 `config_digest`を作らない。manifestへ入れてcoreへ渡したcriterionについて、coreが返す
 `spawn_failed`、`timeout`、`terminated_by_signal`は`UNAVAILABLE`のまま返し、coverage gapへ
 置き換えない。coreを起動していないcallerまたはpackageのerrorからcore outcomeやreportを作らない。
@@ -117,10 +132,12 @@ coreのoutcome、CLI exit code、report、`config_digest`を改変しない。co
 実行済みcriteriaがすべて`PASS`でも、依頼全体を検証済みとは表現しない。coreの`PASS`を
 target artifact全体の正しさへ拡張しない。
 
-Skillはtarget artifactを生成、編集、または修復しない。response draftを検査対象にできるのは、検査結果を
+Skillはtarget artifactを生成、編集、または修復しない。同じtask内で生成したmanifestとcheckerは
+planningからverificationまでtarget外のtemporary directoryへ保持できるが、workflow終了後は削除する。
+taskまたはsessionを越える保存はcallerが明示して所有する。response draftを検査対象にできるのは、検査結果を
 利用者が取得できる別のcarrierで返せるrequestとclient surfaceの組合せだけとする。別carrierが
 なければその組合せを未対応とする。draftの検査結果は、最終送信bytesとの同一性を保証しない。
-criteriaの承認、固定、保存、実行強制、修復、およびreportを信頼するための運用はSkillが担わず、
+criteriaの承認、taskを越える固定と保存、実行強制、修復、およびreportを信頼するための運用はSkillが担わず、
 引き続き利用者側のcaller責務とする。
 
 ## Checker contract

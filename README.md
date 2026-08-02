@@ -5,11 +5,12 @@
 > it does not distribute an npm package or global command. A Skill release alone
 > does not establish support for any client surface. Do not use `npx`.
 
-> **Replace an AI's “done” with executed check results.**
+> **Define completion checks before work. Replace an AI's “done” with their executed results.**
 
 Exit Criteria is a small, tool-neutral acceptance gate. Put the checks required
-to call an artifact complete in one file, run one command, and receive the same
-`PASS`, `FAIL`, or `UNAVAILABLE` report locally, in CI, or from an agent.
+to call an artifact complete in one file before implementation, then run them
+before completion and receive the same `PASS`, `FAIL`, or `UNAVAILABLE` report
+locally, in CI, or from an agent.
 
 It does not replace test runners, spreadsheet validators, PDF inspectors, or
 other domain tools. It runs those tools through one manifest and gives their
@@ -60,12 +61,16 @@ version, OS, Node.js version, manual placement method, and observed result. Each
 client surface is validated independently; one result does not establish or
 prevent support for another surface.
 
-When the Skill is invoked implicitly before a completion claim, the ordinary
-response explains, in the user's language, which requested properties were
-confirmed, which did not hold, and which remain unchecked. It does not use
-criterion names, command counts, or bare core outcomes as the explanation.
-Explicit invocation, or a request for the complete inspection record, returns
-the exact core report when one exists and the separated caller-side evidence.
+The Skill has two invocation stages. During implementation planning or before
+the first intentional target mutation, it maps requested properties to criteria
+or coverage gaps and records the effective configuration as a pre-work baseline.
+Before a completion claim, it verifies the target with that same baseline. The
+ordinary response uses the user's language and does not use criterion names,
+command counts, or bare core outcomes as the explanation. Explicit invocation,
+or a request for the complete inspection record, returns the exact core report
+when one exists and the separated caller-side evidence. Verification without a
+recorded pre-work baseline is retrospective and does not show that criteria were
+fixed before implementation.
 
 If Exit Criteria does not activate before a completion claim in your Claude
 Code setup, configure a separate
@@ -74,7 +79,8 @@ hook runs whenever the main agent finishes responding, not only when a task is
 complete, and must handle `stop_hook_active` to avoid a loop. This fallback is
 client-side automation. It is not part of Exit Criteria core, the Skill
 installation, or normal use, and it does not guarantee Skill activation or
-compliance. The release asset includes no hook configuration or hook state.
+compliance. A completion-time hook cannot replace the pre-work planning stage.
+The release asset includes no hook configuration or hook state.
 
 To uninstall, remove only the installed `exit-criteria` directory chosen from
 the table and reload the client. Caller-owned reports, manifests, and saved
@@ -241,9 +247,11 @@ environment variables, the resolved executable, checker bytes, the Exit
 Criteria revision, artifact bytes or revision, or report authenticity. It also
 does not prove that criteria were fixed before work began.
 
-The caller owns recording and comparing an expected digest. When identity or
-provenance matters, the caller also binds the report to the exact Exit Criteria
-revision, target artifact or revision, and execution context.
+The Skill planning stage records an expected digest before target mutation when
+it can form a valid manifest. The caller owns preserving and comparing that
+baseline across tasks or sessions. When identity or provenance matters, the
+caller also binds the report to the exact Exit Criteria revision, target
+artifact or revision, and execution context.
 
 ## Responsibility boundary
 
@@ -337,10 +345,10 @@ is outside the supported contract.
 > Skill releaseが存在するだけでは、どのclient surfaceのsupportも意味しません。`npx`を
 > 使用しないでください。
 
-> **AIの「完成しました」を、実行された検査結果に置き換える。**
+> **作業前に完成条件を決め、AIの「完成しました」をその実行結果に置き換える。**
 
 Exit Criteriaは、特定のagentや成果物に依存しない小さなacceptance gateです。
-成果物を完了と呼ぶために必要な検査を一つのfileへ書き、一つのcommandで実行すると、
+成果物を完了と呼ぶために必要な検査を実装前に一つのfileへ書き、完成提示前に実行すると、
 local、CI、agentのどこからでも同じ`PASS`、`FAIL`、`UNAVAILABLE`のreportを得られます。
 
 test runner、Excel検査、PDF検査などを置き換えるものではありません。領域ごとの既存の
@@ -385,16 +393,19 @@ Skillを明示的に選択または起動します。Skill release、client surf
 manual配置方式、観測結果を記録します。各client surfaceは独立に検証し、一つの結果が別surfaceの
 supportを成立させたり、その検証を妨げたりすることはありません。
 
-Skillが完了報告の前に暗黙起動した場合、通常のresponseでは、依頼のどこを確認でき、どこが
-依頼どおりでなく、何がまだ確認できていないかを利用者の言語で説明します。criterion名、
-command件数、core outcomeだけを説明にはしません。明示起動または完全な検査記録の要求では、
-存在する場合はexact core reportを、caller側evidenceとは分離して返します。
+Skillは二段階で起動します。implementation planningまたは最初の意図的なtarget mutation前に、依頼された
+性質をcriteriaかcoverage gapへ対応付け、実効設定をpre-work baselineとして記録します。完了報告の前には、
+同じbaselineで対象を検証します。通常のresponseでは利用者の言語を使い、criterion名、command件数、
+core outcomeだけを説明にはしません。明示起動または完全な検査記録の要求では、存在する場合はexact core
+reportをcaller側evidenceとは分離して返します。記録済みpre-work baselineがない検証はretrospectiveであり、
+criteriaが実装前に固定されていたことを示しません。
 
 Claude Codeでcompletion claimの前にExit Criteriaが起動しない場合は、fallbackとして別途
 [`Stop` hook](https://code.claude.com/docs/en/hooks)を設定してください。`Stop` hookはtask完了時だけでなく、
 main agentがresponseを終えるたびに動作するため、loopを避けるには`stop_hook_active`を扱う必要があります。
 このfallbackはclient側automationです。Exit Criteria core、Skillのinstall、通常利用の一部ではなく、
-Skill activationまたはcomplianceを保証しません。release assetへhook設定やhook用stateは同梱しません。
+Skill activationまたはcomplianceを保証しません。completion時のhookはpre-work planning段階を代替できません。
+release assetへhook設定やhook用stateは同梱しません。
 
 uninstallでは、表から選んでinstallした`exit-criteria` directoryだけを削除し、clientをreloadします。
 callerが保存したreport、manifest、evidenceはinstalled runtime stateではなく、Skillと一緒には
@@ -546,8 +557,9 @@ digestには、repository root、config path、`PATH`などの環境変数、解
 bytes、Exit Criteriaのrevision、artifactのbytesやrevision、reportの真正性は含まれません。
 criteriaが作業前に固定されていたことも証明しません。
 
-期待するdigestの記録と比較はcallerが担います。識別や来歴が必要な場合は、reportを正確な
-Exit Criteria revision、対象artifactまたはrevision、実行contextへ結び付ける責任もcallerに
+Skillのplanning段階は、有効なmanifestを構成できる場合、target mutation前に期待するdigestを記録します。
+そのbaselineをtaskまたはsessionを越えて保存し、比較する責任はcallerが担います。識別や来歴が必要な場合は、
+reportを正確なExit Criteria revision、対象artifactまたはrevision、実行contextへ結び付ける責任もcallerに
 あります。
 
 ## 責任の境界
