@@ -22,7 +22,7 @@ coreはGit、GitHub、Issue、pull request、CI、MCP、言語モデル、networ
 
 ## 変更履歴
 
-- v1.0.2で、公式Skillの責務へtarget mutation前のbaseline準備と、同じbaselineを使うcompletion前の
+- [PR #20](https://github.com/agent-operated/exit-criteria/pull/20)で、公式Skillの責務へtarget mutation前のbaseline準備と、同じbaselineを使うcompletion前の
   verificationを追加した。taskを越える保存と強制はcaller責務のままとした。
 - [Issue #11](https://github.com/agent-operated/exit-criteria/issues/11)を受け、
   [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、caller責務をcore外に置く判断を

@@ -44,7 +44,7 @@ requestとsurfaceの組合せを未対応とする。検査対象は送信前の
 
 ## 変更履歴
 
-- v1.0.2で、client別検証対象へ二段階の代表的なimplicit invocationを追加し、completion時のhookでは
+- [PR #20](https://github.com/agent-operated/exit-criteria/pull/20)で、client別検証対象へ二段階の代表的なimplicit invocationを追加し、completion時のhookでは
   第一段階を代替できない境界を追加した。
 - [PR #15](https://github.com/agent-operated/exit-criteria/pull/15)で、target familyをCodexだけから
   CodexとClaude Codeへ広げ、この二つのclient-wide scopeの対応表を`README.md`へ置く手段に変更した。

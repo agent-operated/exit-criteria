@@ -73,7 +73,7 @@ repository rootの外側にあるcaller-ownedの永続場所へ保存する。ta
 
 ## 変更履歴
 
-- v1.0.2で、planning段階のpre-work baselineから同じtaskのverificationまでsupport fileを保持し、
+- [PR #20](https://github.com/agent-operated/exit-criteria/pull/20)で、planning段階のpre-work baselineから同じtaskのverificationまでsupport fileを保持し、
   verification前にdigest一致を要求する二段階lifecycleへ変更した。
 - [Issue #17](https://github.com/agent-operated/exit-criteria/issues/17)を受け、
   [PR #18](https://github.com/agent-operated/exit-criteria/pull/18)で、暗黙起動では利用者の言語でmaterial claimごとの

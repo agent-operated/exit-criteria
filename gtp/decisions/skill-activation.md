@@ -37,7 +37,7 @@ formatted output、またはsubmissionとして依頼された場合だけtarget
 
 ## 変更履歴
 
-- v1.0.2で、implementation planまたはtarget mutation前のcriteria準備と、completion claim前の検証を
+- [PR #20](https://github.com/agent-operated/exit-criteria/pull/20)で、implementation planまたはtarget mutation前のcriteria準備と、completion claim前の検証を
   分離した二段階のimplicit invocationへ変更した。
 - [PR #15](https://github.com/agent-operated/exit-criteria/pull/15)で、completionまたはreadyのclaimを伴う
   提示はstatus報告だけの依頼に含めず、対象のtest、CI、manual検証をSkillによるclaim検査の代替に
