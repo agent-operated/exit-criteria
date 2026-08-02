@@ -1,12 +1,7 @@
 {
   "name": "exit-criteria",
-  "version": "0.0.0-development",
-  "description": "Replace an AI's done claim with executed acceptance-check results",
   "private": true,
   "type": "module",
-  "bin": {
-    "exit-criteria": "dist/src/cli.js"
-  },
   "engines": {
     "node": ">=20"
   },

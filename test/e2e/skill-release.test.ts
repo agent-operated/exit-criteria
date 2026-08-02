@@ -20,7 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..", "..");
 const buildScript = resolve(repoRoot, "scripts", "build-skill-release.mjs");
 const builtAsset = resolve(repoRoot, "dist", "skill", "exit-criteria");
-const releaseTag = "v1.0.0";
+const releaseTag = "v1.0.1";
 
 interface ProcessRun {
   readonly status: number | null;
@@ -276,6 +276,8 @@ test("the manual validation table and bundle stay within the selected client bou
   assert.match(readme, /## Install and validate a Skill release/u);
   assert.match(readme, /## Skill releaseをinstallして検証する/u);
   assert.doesNotMatch(readme, /prerelease Skill/u);
+  assert.match(readme, /does not distribute an npm package or global command/u);
+  assert.match(readme, /npm packageまたはglobal commandは配布しません/u);
   assert.match(
     readme,
     /implicitly before a completion claim[\s\S]*in the user's language[\s\S]*complete inspection record/u,
@@ -363,6 +365,15 @@ test("a matching release identity runs the real bundled core with an external ma
   assert.equal(version.status, 0, version.stderr);
   assert.equal(version.stdout.trim(), releaseTag);
 
+  const help = run(
+    process.execPath,
+    [join(skill, "scripts", "exit-criteria.mjs"), "--help"],
+    root,
+  );
+  assert.equal(help.status, 0, help.stderr);
+  assert.match(help.stdout, /show the Skill release version/u);
+  assert.doesNotMatch(help.stdout, /package version/u);
+
   const shown = JSON.parse(showConfig(skill, target).stdout) as ShownConfig;
   const execution = runSkill(skill, target);
   assert.equal(execution.status, 0, execution.stderr);
@@ -388,7 +399,7 @@ test("a version mismatch fails before core and emits no report", (t) => {
   const execution = runSkill(skill, target);
   assert.equal(execution.status, 2);
   assert.equal(execution.stdout, "");
-  assert.match(execution.stderr, /^PACKAGE ERROR .*version mismatch/u);
+  assert.match(execution.stderr, /^SKILL ERROR .*version mismatch/u);
   assert.doesNotMatch(execution.stderr, /config_digest|run_outcome/u);
   assert.equal(existsSync(target.marker), false);
 });
@@ -401,7 +412,7 @@ test("a missing SKILL.md fails before core and emits no report", (t) => {
   const execution = runSkill(skill, target);
   assert.equal(execution.status, 2);
   assert.equal(execution.stdout, "");
-  assert.match(execution.stderr, /^PACKAGE ERROR .*cannot read SKILL\.md/u);
+  assert.match(execution.stderr, /^SKILL ERROR .*cannot read SKILL\.md/u);
   assert.doesNotMatch(execution.stderr, /config_digest|run_outcome/u);
   assert.equal(existsSync(target.marker), false);
 });
@@ -418,7 +429,7 @@ test("a missing metadata.version fails before core and emits no report", (t) => 
   const execution = runSkill(skill, target);
   assert.equal(execution.status, 2);
   assert.equal(execution.stdout, "");
-  assert.match(execution.stderr, /^PACKAGE ERROR .*metadata\.version is missing/u);
+  assert.match(execution.stderr, /^SKILL ERROR .*metadata\.version is missing/u);
   assert.doesNotMatch(execution.stderr, /config_digest|run_outcome/u);
   assert.equal(existsSync(target.marker), false);
 });

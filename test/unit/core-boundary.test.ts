@@ -25,15 +25,19 @@ function sourceFiles(directory: string): string[] {
   });
 }
 
-test("core keeps one runtime dependency and one CLI entry point", () => {
+test("core keeps one runtime dependency and no npm install surface", () => {
   const pkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8")) as {
     bin?: Record<string, string>;
+    description?: string;
     dependencies?: Record<string, string>;
     exports?: unknown;
+    version?: string;
   };
 
   assert.deepEqual(Object.keys(pkg.dependencies ?? {}).sort(), ["yaml"]);
-  assert.deepEqual(Object.keys(pkg.bin ?? {}).sort(), ["exit-criteria"]);
+  assert.equal(pkg.bin, undefined, "an npm bin would advertise an unsupported install surface");
+  assert.equal(pkg.version, undefined, "the development workspace has no npm release version");
+  assert.equal(pkg.description, undefined, "npm discovery metadata is outside the release surface");
   assert.equal(pkg.exports, undefined, "a public library API requires a prior boundary decision");
 });
 

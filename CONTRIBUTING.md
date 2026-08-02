@@ -1,8 +1,10 @@
 # Contributing
 
-The Exit Criteria core CLI remains source-only. The npm package is private and
-unpublished; the standalone Skill is distributed separately through GitHub
-Release assets. Development requires Node.js 20 or later.
+The Exit Criteria core CLI remains source-only. This repository uses npm for
+development dependency and script management, not as a distribution channel.
+The standalone Skill directory is the only installable artifact and is
+distributed through GitHub Release assets. Development requires Node.js 20 or
+later.
 
 Before changing behavior, read [DESIGN.md](DESIGN.md), [GTP.md](GTP.md), and
 the existing [Decision Records](gtp/decisions/). Preserve the absolute core
@@ -38,8 +40,9 @@ for ordinary bugs and feature discussions.
 
 # コントリビューション
 
-Exit Criteria core CLIは引き続きsourceから利用します。npm packageはprivateで未公開であり、
-standalone SkillはGitHub Release assetとして別に配布します。開発にはNode.js 20以上が必要です。
+Exit Criteria core CLIは引き続きsourceから利用します。このrepositoryでnpmを使うのは、開発時の
+dependencyとscriptを管理するためであり、配布には使いません。install可能な成果物はstandalone
+Skill directoryだけで、GitHub Release assetとして配布します。開発にはNode.js 20以上が必要です。
 
 挙動を変更する前に、[DESIGN.md](DESIGN.md)、[GTP.md](GTP.md)、既存の
 [Decision Record](gtp/decisions/)を読んでください。`DESIGN.md`のabsolute core boundaryを
