@@ -20,7 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..", "..");
 const buildScript = resolve(repoRoot, "scripts", "build-skill-release.mjs");
 const builtAsset = resolve(repoRoot, "dist", "skill", "exit-criteria");
-const releaseTag = "v9.8.7-rc.1";
+const releaseTag = "v1.0.0";
 
 interface ProcessRun {
   readonly status: number | null;
@@ -273,6 +273,9 @@ test("the manual validation table and bundle stay within the selected client bou
   assert.match(readme, /If Exit Criteria does not activate before a completion claim[\s\S]*as a fallback\./u);
   assert.match(readme, /このfallbackはclient側automationです。/u);
   assert.match(readme, /release assetへhook設定やhook用stateは同梱しません。/u);
+  assert.match(readme, /## Install and validate a Skill release/u);
+  assert.match(readme, /## Skill releaseをinstallして検証する/u);
+  assert.doesNotMatch(readme, /prerelease Skill/u);
   assert.match(
     readme,
     /implicitly before a completion claim[\s\S]*in the user's language[\s\S]*complete inspection record/u,

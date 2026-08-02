@@ -214,6 +214,6 @@ public outcomeは`PASS`、`FAIL`、`UNAVAILABLE`、criteria reportのexit code�
 新しいcommand、outcome、report field、manifest fieldはpublic contract変更として扱う。
 
 Exit Criteria Skillのsourceとrelease buildは実装済みだが、このcore CLIのcurrent public surfaceには
-含めない。prerelease assetをmanual検証用に配布しても、それだけではclient supportを意味しない。
+含めない。release assetを配布しても、それだけではclient supportを意味しない。
 対応するSkill release、client surface、client version、OS、Node.js version、manual配置方法の
 support claimは、後続の実client e2eが通過した組合せに限って追加する。
