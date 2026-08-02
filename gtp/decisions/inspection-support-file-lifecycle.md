@@ -67,7 +67,8 @@ cleanup前にmanifestとcheckerをtarget artifactおよびrepository rootの外�
 
 ## 変更履歴
 
-- [Issue #17](https://github.com/agent-operated/exit-criteria/issues/17)を受け、暗黙起動では利用者の言語で
-  material claimごとの平易な説明を返し、明示起動または完全な記録の要求では分離した検査記録を返す手段へ変更。
+- [Issue #17](https://github.com/agent-operated/exit-criteria/issues/17)を受け、
+  [PR #18](https://github.com/agent-operated/exit-criteria/pull/18)で、暗黙起動では利用者の言語でmaterial claimごとの
+  平易な説明を返し、明示起動または完全な記録の要求では分離した検査記録を返す手段へ変更。
 - [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、返却用fileとopt-inの永続保存先を
   target artifactおよびrepository rootの外側へ限定した。
