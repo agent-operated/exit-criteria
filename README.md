@@ -34,7 +34,6 @@ the extracted `exit-criteria` directory at that destination.
 | --- | --- | --- | --- |
 | Codex | `USER` | `$HOME/.agents/skills/exit-criteria/` | [Build skills](https://learn.chatgpt.com/docs/build-skills) |
 | Claude Code | `Personal` | `~/.claude/skills/exit-criteria/` | [Extend Claude with skills](https://code.claude.com/docs/en/skills) |
-| Cursor | `User-level` | `~/.agents/skills/exit-criteria/` or `~/.cursor/skills/exit-criteria/` | [Agent Skills](https://cursor.com/docs/skills) |
 
 These mappings describe client-wide Skill discovery locations. A row does not
 establish support for that client or surface. Stop if the chosen destination
@@ -60,6 +59,15 @@ the Skill using that client. Record the Skill release, client surface and
 version, OS, Node.js version, manual placement method, and observed result. Each
 client surface is validated independently; one result does not establish or
 prevent support for another surface.
+
+If Exit Criteria does not activate before a completion claim in your Claude
+Code setup, configure a separate
+[`Stop` hook](https://code.claude.com/docs/en/hooks) as a fallback. A `Stop`
+hook runs whenever the main agent finishes responding, not only when a task is
+complete, and must handle `stop_hook_active` to avoid a loop. This fallback is
+client-side automation. It is not part of Exit Criteria core, the Skill
+installation, or normal use, and it does not guarantee Skill activation or
+compliance. The release asset includes no hook configuration or hook state.
 
 To uninstall, remove only the installed `exit-criteria` directory chosen from
 the table and reload the client. Caller-owned reports, manifests, and saved
@@ -345,7 +353,6 @@ development sourceであり、bundled runnerを含むinstall assetではあり�
 | --- | --- | --- | --- |
 | Codex | `USER` | `$HOME/.agents/skills/exit-criteria/` | [Build skills](https://learn.chatgpt.com/docs/build-skills) |
 | Claude Code | `Personal` | `~/.claude/skills/exit-criteria/` | [Extend Claude with skills](https://code.claude.com/docs/en/skills) |
-| Cursor | `User-level` | `~/.agents/skills/exit-criteria/`または`~/.cursor/skills/exit-criteria/` | [Agent Skills](https://cursor.com/docs/skills) |
 
 この対応表が示すのは、client-wideなSkillの認識先です。表に載っているだけでは、そのclientまたは
 surfaceのsupport claimにはなりません。配置先が既に存在する場合は停止してください。updateでは、
@@ -367,6 +374,12 @@ version出力が選択したrelease tagと完全一致することを確認し�
 Skillを明示的に選択または起動します。Skill release、client surfaceとversion、OS、Node.js version、
 manual配置方式、観測結果を記録します。各client surfaceは独立に検証し、一つの結果が別surfaceの
 supportを成立させたり、その検証を妨げたりすることはありません。
+
+Claude Codeでcompletion claimの前にExit Criteriaが起動しない場合は、fallbackとして別途
+[`Stop` hook](https://code.claude.com/docs/en/hooks)を設定してください。`Stop` hookはtask完了時だけでなく、
+main agentがresponseを終えるたびに動作するため、loopを避けるには`stop_hook_active`を扱う必要があります。
+このfallbackはclient側automationです。Exit Criteria core、Skillのinstall、通常利用の一部ではなく、
+Skill activationまたはcomplianceを保証しません。release assetへhook設定やhook用stateは同梱しません。
 
 uninstallでは、表から選んでinstallした`exit-criteria` directoryだけを削除し、clientをreloadします。
 callerが保存したreport、manifest、evidenceはinstalled runtime stateではなく、Skillと一緒には

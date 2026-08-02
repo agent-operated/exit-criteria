@@ -4,7 +4,7 @@ Exit Criteria Skillが、どのclient surfaceで動作すると公式に表明�
 
 ## 採用した手段
 
-target familyはCodex、Claude Code、Cursorとし、最初に検証するcandidate surfaceまたは検証順序は
+target familyはCodexとClaude Codeとし、最初に検証するcandidate surfaceまたは検証順序は
 固定しない。各client surfaceは任意の順で独立に検証でき、一つのsurfaceの結果は別surfaceの検証を
 妨げず、そのsupportも成立させない。
 support claimは実clientでのend-to-end testが通過した正確な組合せに限り、Skill release、surface、
@@ -30,6 +30,11 @@ end-to-end testが通過していないclient surfaceと検証組合せは`unver
 表明しない。`agents/openai.yaml`はOpenAI client向けのoptional metadataとして扱い、portableなSkill
 contractまたはsupport evidenceの正本にしない。
 
+Claude Codeでcompletion claimの前にimplicit invocationが観測されない場合、利用者は固定した
+lifecycle時点で再確認するfallbackとしてclient側へhookを設定する。このfallbackはExit Criteria core、
+Skillのinstall、通常利用、またはsupport claimの要件にしない。hookの利用だけでSkill activationまたは
+complianceを保証しない。hook設定とhook用stateはrelease assetへ同梱しない。
+
 最終response本文をartifactとして検査する依頼は、検査結果を利用者が取得できる別のmessage、file、
 またはmetadataへ分離できる場合だけ対応する。分離できない場合、そのsurface全体ではなく、該当する
 requestとsurfaceの組合せを未対応とする。検査対象は送信前のdraftであり、最終送信bytesとの同一性は
@@ -38,8 +43,9 @@ requestとsurfaceの組合せを未対応とする。検査対象は送信前の
 ## 変更履歴
 
 - [PR #15](https://github.com/agent-operated/exit-criteria/pull/15)で、target familyをCodexだけから
-  Codex、Claude Code、Cursorへ広げ、client-wide scopeの対応表を`README.md`へ置く手段に変更した。
-  対応表への掲載だけではsupport claimを成立させない。
+  CodexとClaude Codeへ広げ、この二つのclient-wide scopeの対応表を`README.md`へ置く手段に変更した。
+  対応表への掲載だけではsupport claimを成立させず、Claude Codeでimplicit invocationが観測されない
+  場合のhookをclient側fallbackに限定した。
 - [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、manual配置をCodexの`USER` scopeへ
   限定し、`REPO` scopeをsupport対象外とした。
 - [PR #14](https://github.com/agent-operated/exit-criteria/pull/14)で、Codex CLIを最初のcandidateに
