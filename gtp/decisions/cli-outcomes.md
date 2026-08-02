@@ -21,9 +21,11 @@ version付きmachine contractはJSON report version 2とする。rootは`tool`�
 `config_digest`を持たない。
 
 `--json`指定時は、扱える設定errorと実行不能を含むcheck outcomeをJSONとしてstdoutへ出す。
-checkerのstdoutとstderrはCLIのstderrへ転送し、checkerのstdinは無視する。`-h|--help`と
-`-v|--version`はcriteriaを評価せず、情報をstdoutへ出してexit code `0`を返す。bareな`help`と
-`version`はsubcommandとして受け付けない。usage errorと予期しない内部障害はstderrへ出し、
+checkerのstdoutとstderrはCLIのstderrへ転送し、checkerのstdinは無視する。direct core CLIの
+`-h|--help`はcriteriaを評価せず、情報をstdoutへ出してexit code `0`を返す。direct core CLIは
+release artifactではないため`-v|--version`を持たず、bareな`help`と`version`もsubcommandとして
+受け付けない。standalone Skill runnerのrelease version照合は`skill-core-version-coupling.md`が所有する。
+usage errorと予期しない内部障害はstderrへ出し、
 exit code `2`とする。CLI自身が`SIGINT`または`SIGTERM`を受けた場合は、activeな直接processを
 終了させて同じsignalで終了する。情報表示、usage error、内部障害、CLI自身のsignal終了では
 JSON reportを保証しない。
@@ -39,6 +41,8 @@ stdoutまたはstderrを保持している間は完走としない。`timeout_se
 
 ## 変更履歴
 
+- v1.0.1で、standalone Skill directoryだけをrelease artifactとする境界に合わせ、direct core CLIから
+  npm package versionを示していた`-v|--version`を削除した。
 - [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、report version 1の
   `conditions[].condition_id`はcriteria manifestの語彙と一致しなかったため、
   対応release前にversion 2の`results[].criterion_id`へ修正し、version 1 aliasは残さなかった。

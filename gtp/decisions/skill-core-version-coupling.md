@@ -6,7 +6,7 @@
 
 release時のGit tag文字列を加工せず、`SKILL.md`の`metadata.version`とbundled runnerへ埋め込むversionへ
 投影する。runnerはcoreを起動する前に、自身が属するSkill directory rootの`SKILL.md`を読む。両者の
-文字列が完全一致することを検査する。不一致または`metadata.version`を読み取れない場合はpackage errorを
+文字列が完全一致することを検査する。不一致または`metadata.version`を読み取れない場合はSkill errorを
 stderrへ出してnonzeroで終了する。core outcome、report、`config_digest`は作らない。
 
 この一致が示すのは、Skillとrunnerが同じdeclared release identityを名乗っていることだけである。
@@ -17,4 +17,9 @@ release e2eでは、同じdeclared release identityのpairが実coreを起動で
 宣言するpairがcore起動前に拒否されることを検査する。
 
 この照合とsupport claimは生成済みrelease assetのSkillに限定する。source checkout内の未bundle Skillは
-development用途とし、既存のdirect core CLIはSkill metadataを参照せず現在のcontractを維持する。
+development用途とし、direct core CLIはrelease identityまたはpackage versionを公開しない。
+
+## 変更履歴
+
+- v1.0.1で、npm packageとの混同を避けるため、bundled runnerの診断をpackage errorからSkill errorへ
+  変更し、direct core CLIからrelease version表示を削除した。

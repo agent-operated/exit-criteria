@@ -1,9 +1,9 @@
 # Exit Criteria
 
 > **Distribution status:** the standalone Skill is distributed through
-> versioned GitHub Release assets. The npm package remains private and
-> unpublished. A Skill release alone does not establish support for any client
-> surface. Do not use `npx` or assume a global `exit-criteria` command.
+> versioned GitHub Release assets. This repository uses npm only for development;
+> it does not distribute an npm package or global command. A Skill release alone
+> does not establish support for any client surface. Do not use `npx`.
 
 > **Replace an AI's “done” with executed check results.**
 
@@ -111,8 +111,10 @@ PASS        workbook_opens  (exit 0)
 run: PASS
 ```
 
-Add `--json` for the versioned automation contract. The built CLI also accepts
-`--config PATH`, `--repo-root PATH`, `-h|--help`, and `-v|--version`.
+Add `--json` for the versioned automation contract. The built direct core CLI
+also accepts `--config PATH`, `--repo-root PATH`, and `-h|--help`. It is a
+source-checkout interface, not an installed npm command, and does not expose a
+package version. The standalone Skill runner exposes its Skill release version.
 
 ## Manifest version 1
 
@@ -331,9 +333,9 @@ is outside the supported contract.
 # Exit Criteria（日本語）
 
 > **配布状況:** standalone Skillはversion付きGitHub Release assetとして配布します。
-> npm packageは引き続きprivateで未公開です。Skill releaseが存在するだけでは、どのclient
-> surfaceのsupportも意味しません。`npx`やglobalにinstall済みの`exit-criteria` commandを
-> 前提にしないでください。
+> このrepositoryでnpmを使うのは開発時だけであり、npm packageまたはglobal commandは配布しません。
+> Skill releaseが存在するだけでは、どのclient surfaceのsupportも意味しません。`npx`を
+> 使用しないでください。
 
 > **AIの「完成しました」を、実行された検査結果に置き換える。**
 
@@ -428,8 +430,10 @@ PASS        workbook_opens  (exit 0)
 run: PASS
 ```
 
-version付きの自動処理contractには`--json`を追加します。CLIは`--config PATH`、
-`--repo-root PATH`、`-h|--help`、`-v|--version`も受け付けます。
+version付きの自動処理contractには`--json`を追加します。build済みのdirect core CLIは
+`--config PATH`、`--repo-root PATH`、`-h|--help`も受け付けます。これはsource checkout用の
+interfaceであり、npmからinstallするcommandではなく、package versionも公開しません。
+standalone Skill runnerはSkill release versionを公開します。
 
 ## Manifest version 1
 

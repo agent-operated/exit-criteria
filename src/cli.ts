@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { createRequire } from "node:module";
 import process from "node:process";
 
 import { runCriteria } from "./application/run-criteria.js";
@@ -15,8 +14,7 @@ interface Options {
 
 type CliAction =
   | { readonly kind: "check"; readonly options: Options }
-  | { readonly kind: "help" }
-  | { readonly kind: "version" };
+  | { readonly kind: "help" };
 
 const HELP = `Usage: exit-criteria check [options]
 
@@ -25,10 +23,7 @@ Options:
                      (default: exit-criteria.yml)
   --repo-root PATH   root used for config and criterion cwd (default: current directory)
   --json             write a versioned JSON report to stdout
-  -h, --help         show this help
-  -v, --version      show the package version`;
-
-const packageJson = createRequire(import.meta.url)("../../package.json") as { version: string };
+  -h, --help         show this help`;
 
 class UsageError extends Error {
   constructor(message: string) {
@@ -48,9 +43,6 @@ function requiredValue(argv: readonly string[], index: number, flag: string): st
 function parseArgs(argv: readonly string[]): CliAction {
   if (argv[0] === "--help" || argv[0] === "-h") {
     return { kind: "help" };
-  }
-  if (argv[0] === "--version" || argv[0] === "-v") {
-    return { kind: "version" };
   }
   if (argv[0] !== "check") {
     throw new UsageError("usage: exit-criteria check [options]");
@@ -76,9 +68,6 @@ function parseArgs(argv: readonly string[]): CliAction {
       case "--help":
       case "-h":
         return { kind: "help" };
-      case "--version":
-      case "-v":
-        return { kind: "version" };
       default:
         throw new UsageError(`unknown argument: ${String(arg)}`);
     }
@@ -95,10 +84,6 @@ async function main(): Promise<void> {
   const action = parseArgs(process.argv.slice(2));
   if (action.kind === "help") {
     process.stdout.write(HELP + "\n");
-    return;
-  }
-  if (action.kind === "version") {
-    process.stdout.write(packageJson.version + "\n");
     return;
   }
   const options = action.options;

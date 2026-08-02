@@ -195,16 +195,16 @@ criterion自体の不適合と、checker内部のdependencyまたは実行環境
 artifact、commit、reportの真正性は識別しない。criteriaが弱い場合、またはcheckerが誤っている
 場合、`PASS`の保証も弱い。
 
-## Current public surface
+## Direct core CLI source surface
 
 ```console
-exit-criteria check [--config PATH] [--repo-root PATH] [--json]
-exit-criteria [-h|--help]
-exit-criteria [-v|--version]
+node /absolute/path/to/exit-criteria/dist/src/cli.js check [--config PATH] [--repo-root PATH] [--json]
+node /absolute/path/to/exit-criteria/dist/src/cli.js [-h|--help]
 ```
 
-`-h|--help`と`-v|--version`は`check`と一緒にも指定できる。bareな`help`と`version`は
-subcommandではない。
+direct core CLIはreview済みsource checkoutのbuild outputから実行する開発用interfaceであり、
+npm package、global command、またはrelease versionを公開しない。`-h|--help`は`check`と一緒にも
+指定できる。`-v|--version`、bareな`help`、bareな`version`は受け付けない。
 
 relativeな`--config`は`--repo-root`を基準に解決する。absolute pathと`..` segmentを許可し、
 解決後のconfig pathはroot外になり得る。configはcaller所有の信頼済みmanifestであり、criterion
@@ -213,7 +213,8 @@ relativeな`--config`は`--repo-root`を基準に解決する。absolute pathと
 public outcomeは`PASS`、`FAIL`、`UNAVAILABLE`、criteria reportのexit codeは`0`、`1`、`2`である。
 新しいcommand、outcome、report field、manifest fieldはpublic contract変更として扱う。
 
-Exit Criteria Skillのsourceとrelease buildは実装済みだが、このcore CLIのcurrent public surfaceには
-含めない。release assetを配布しても、それだけではclient supportを意味しない。
+Exit Criteria Skillのsourceとrelease buildは、このdirect core CLI source surfaceには含めない。
+standalone Skill runnerはSkill release versionと`show-config`を持つ。release assetを配布しても、
+それだけではclient supportを意味しない。
 対応するSkill release、client surface、client version、OS、Node.js version、manual配置方法の
 support claimは、後続の実client e2eが通過した組合せに限って追加する。

@@ -6,7 +6,7 @@
 
 公式Skillは、[Agent Skills specification](https://agentskills.io/specification)に従う一つのstandalone
 Skill directoryをrelease assetとして配布する。directoryには`SKILL.md`と単一のbundled JavaScript
-runnerを置く。runnerにはSkill package用entrypoint、core、YAML parserを含める。OpenAI client向けの
+runnerを置く。runnerにはSkill用entrypoint、core、YAML parserを含める。OpenAI client向けの
 `agents/openai.yaml`と必要なthird-party license noticeも同じdirectoryへ置く。install、update、removeは
 一つのSkill directoryだけで完結させる。plugin installへの対応はclaimしない。
 

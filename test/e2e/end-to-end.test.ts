@@ -265,7 +265,7 @@ criteria:
   assert.equal(run.status, 1);
 });
 
-test("help and version are successful informational commands, not PASS reports", () => {
+test("help is a successful informational command, not a PASS report", () => {
   for (const args of [
     ["--help"],
     ["-h"],
@@ -278,19 +278,23 @@ test("help and version are successful informational commands, not PASS reports",
     assert.match(run.stdout, /exit-criteria check/);
     assert.match(run.stdout, /relative PATH resolves from --repo-root/);
     assert.doesNotMatch(run.stdout, /run_outcome/);
+    assert.doesNotMatch(run.stdout, /--version|-v,/);
   }
+});
 
-  for (const args of [["--version"], ["-v"], ["check", "--version"], ["check", "-v"]]) {
-    const version = runRaw(args);
-    assert.equal(version.status, 0);
-    assert.equal(version.stdout.trim(), "0.0.0-development");
-  }
-
-  for (const args of [["help"], ["version"]]) {
+test("the direct core CLI exposes no package version command", () => {
+  for (const args of [
+    ["--version"],
+    ["-v"],
+    ["check", "--version"],
+    ["check", "-v"],
+    ["help"],
+    ["version"],
+  ]) {
     const unsupported = runRaw(args);
     assert.equal(unsupported.status, 2);
     assert.equal(unsupported.stdout, "");
-    assert.match(unsupported.stderr, /usage: exit-criteria check/);
+    assert.match(unsupported.stderr, /usage: exit-criteria check|unknown argument/);
   }
 });
 
@@ -317,7 +321,7 @@ test("usage diagnostics escape line and terminal-control characters", () => {
   assert.equal(run.stderr.split("\n").length, 2);
 });
 
-test("help and version flags are not recognized from option value positions", () => {
+test("option-like values are not mistaken for informational commands", () => {
   for (const value of ["-h", "-v"]) {
     const run = runRaw(["check", "--config", value, "--json"]);
     const actual = report(run);
@@ -325,7 +329,6 @@ test("help and version flags are not recognized from option value positions", ()
     assert.equal(run.status, 2);
     assert.equal(actual.unavailable_reason, "config_unavailable");
     assert.doesNotMatch(run.stdout, /Usage: exit-criteria/);
-    assert.notEqual(run.stdout.trim(), "0.0.0-development");
   }
 
   for (const value of ["--help", "--version"]) {

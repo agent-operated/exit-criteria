@@ -44,7 +44,7 @@ Options:
   --repo-root PATH   root used for config and criterion cwd (default: current directory)
   --json             write a versioned JSON report to stdout (check only)
   -h, --help         show this help
-  -v, --version      show the package version`;
+  -v, --version      show the Skill release version`;
 
 class UsageError extends Error {
   constructor(message: string) {
@@ -53,10 +53,10 @@ class UsageError extends Error {
   }
 }
 
-class PackageError extends Error {
+class SkillError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "PackageError";
+    this.name = "SkillError";
   }
 }
 
@@ -122,25 +122,25 @@ async function readDeclaredVersion(): Promise<string> {
   try {
     bytes = await readFile(SKILL_PATH);
   } catch (error) {
-    throw new PackageError(
+    throw new SkillError(
       `cannot read SKILL.md: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  if (!isUtf8(bytes)) throw new PackageError("SKILL.md is not valid UTF-8");
+  if (!isUtf8(bytes)) throw new SkillError("SKILL.md is not valid UTF-8");
 
   const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(bytes.toString("utf8"));
-  if (match?.[1] === undefined) throw new PackageError("SKILL.md frontmatter is missing");
+  if (match?.[1] === undefined) throw new SkillError("SKILL.md frontmatter is missing");
 
   const document = parseDocument(match[1], { uniqueKeys: true });
   if (document.errors.length > 0) {
-    throw new PackageError(`SKILL.md frontmatter is invalid: ${document.errors[0]?.message}`);
+    throw new SkillError(`SKILL.md frontmatter is invalid: ${document.errors[0]?.message}`);
   }
 
   let frontmatter: unknown;
   try {
     frontmatter = document.toJS();
   } catch (error) {
-    throw new PackageError(
+    throw new SkillError(
       `SKILL.md frontmatter is invalid: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
@@ -148,15 +148,15 @@ async function readDeclaredVersion(): Promise<string> {
   const metadata = isRecord(frontmatter) ? frontmatter["metadata"] : undefined;
   const version = isRecord(metadata) ? metadata["version"] : undefined;
   if (typeof version !== "string" || version.length === 0) {
-    throw new PackageError("SKILL.md metadata.version is missing or not a string");
+    throw new SkillError("SKILL.md metadata.version is missing or not a string");
   }
   return version;
 }
 
-async function assertPackageVersion(): Promise<void> {
+async function assertSkillVersion(): Promise<void> {
   const declaredVersion = await readDeclaredVersion();
   if (declaredVersion !== BUNDLED_VERSION) {
-    throw new PackageError(
+    throw new SkillError(
       `version mismatch: SKILL.md declares ${JSON.stringify(declaredVersion)} but runner declares ${JSON.stringify(BUNDLED_VERSION)}`,
     );
   }
@@ -168,7 +168,7 @@ function writeReport(report: Report, json: boolean): void {
 }
 
 async function main(): Promise<void> {
-  await assertPackageVersion();
+  await assertSkillVersion();
   const action = parseArgs(process.argv.slice(2));
   if (action.kind === "help") {
     process.stdout.write(HELP + "\n");
@@ -212,8 +212,8 @@ async function main(): Promise<void> {
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   const prefix =
-    error instanceof PackageError
-      ? "PACKAGE ERROR"
+    error instanceof SkillError
+      ? "SKILL ERROR"
       : error instanceof ConfigError
         ? `CONFIG ERROR ${error.reason}`
         : "ERROR";
