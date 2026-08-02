@@ -21,5 +21,6 @@ development用途とし、direct core CLIはrelease identityまたはpackage ver
 
 ## 変更履歴
 
-- v1.0.1で、npm packageとの混同を避けるため、bundled runnerの診断をpackage errorからSkill errorへ
-  変更し、direct core CLIからrelease version表示を削除した。
+- [PR #19](https://github.com/agent-operated/exit-criteria/pull/19)で、npm packageとの混同を避けるため、
+  bundled runnerの診断をpackage errorからSkill errorへ変更し、direct core CLIからrelease version表示を
+  削除した。

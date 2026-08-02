@@ -41,7 +41,8 @@ stdoutまたはstderrを保持している間は完走としない。`timeout_se
 
 ## 変更履歴
 
-- v1.0.1で、standalone Skill directoryだけをrelease artifactとする境界に合わせ、direct core CLIから
+- [PR #19](https://github.com/agent-operated/exit-criteria/pull/19)で、standalone Skill directoryだけを
+  release artifactとする境界に合わせ、direct core CLIから
   npm package versionを示していた`-v|--version`を削除した。
 - [PR #10](https://github.com/agent-operated/exit-criteria/pull/10)で、report version 1の
   `conditions[].condition_id`はcriteria manifestの語彙と一致しなかったため、
