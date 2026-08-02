@@ -3,7 +3,11 @@
 > **Distribution status:** the standalone Skill is distributed through
 > versioned GitHub Release assets. This repository uses npm only for development;
 > it does not distribute an npm package or global command. A Skill release alone
-> does not establish support for any client surface. Do not use `npx`.
+> does not establish support for any client surface. For this standalone
+> release-asset route, do not use `npx`. A fixed snapshot is also available from
+> the [`agent-operated/skills`](https://github.com/agent-operated/skills) collection
+> through [collection release `v0.1.0`](https://github.com/agent-operated/skills/releases/tag/v0.1.0),
+> which documents its own install and support boundary.
 
 > **Define completion checks before work. Replace an AI's “done” with their executed results.**
 
@@ -342,8 +346,11 @@ is outside the supported contract.
 
 > **配布状況:** standalone Skillはversion付きGitHub Release assetとして配布します。
 > このrepositoryでnpmを使うのは開発時だけであり、npm packageまたはglobal commandは配布しません。
-> Skill releaseが存在するだけでは、どのclient surfaceのsupportも意味しません。`npx`を
-> 使用しないでください。
+> Skill releaseが存在するだけでは、どのclient surfaceのsupportも意味しません。
+> このstandalone release asset経路では`npx`を使用しないでください。固定snapshotは
+> [`agent-operated/skills`](https://github.com/agent-operated/skills) collectionの
+> [collection release `v0.1.0`](https://github.com/agent-operated/skills/releases/tag/v0.1.0)からも利用できます。
+> そのinstall方法とsupport境界はcollection側の説明に従います。
 
 > **作業前に完成条件を決め、AIの「完成しました」をその実行結果に置き換える。**
 
