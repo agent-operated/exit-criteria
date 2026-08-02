@@ -21,7 +21,8 @@ system requirementは`SKILL.md`の`compatibility`にもmacOS、Linux、Node.js 2
 これらの記載だけで各client surfaceを対応済みとは扱わない。release noteは`README.md`を参照する。
 
 client別end-to-end testでは、文書化した配置先からのSkill発見とclientが提供するexplicit invocationを
-確認する。代表的なimplicit invocationと非invocationも確認する。さらに、post-install networkと
+確認する。implementation planningまたはtarget mutation前とcompletion claim前の代表的なimplicit invocation、
+および非invocationも確認する。さらに、post-install networkと
 `npm install`なしでbundled runnerが実core reportを返すことを確認する。implicit invocationはclientと
 modelの判断を含む。代表例の観測からすべての該当依頼での確実な発火をclaimしない。
 
@@ -33,7 +34,8 @@ contractまたはsupport evidenceの正本にしない。
 Claude Codeでcompletion claimの前にimplicit invocationが観測されない場合、利用者は固定した
 lifecycle時点で再確認するfallbackとしてclient側へhookを設定する。このfallbackはExit Criteria core、
 Skillのinstall、通常利用、またはsupport claimの要件にしない。hookの利用だけでSkill activationまたは
-complianceを保証しない。hook設定とhook用stateはrelease assetへ同梱しない。
+complianceを保証しない。completion時のhookはimplementation planningまたはtarget mutation前の第一段階を
+代替しない。hook設定とhook用stateはrelease assetへ同梱しない。
 
 最終response本文をartifactとして検査する依頼は、検査結果を利用者が取得できる別のmessage、file、
 またはmetadataへ分離できる場合だけ対応する。分離できない場合、そのsurface全体ではなく、該当する
@@ -42,6 +44,8 @@ requestとsurfaceの組合せを未対応とする。検査対象は送信前の
 
 ## 変更履歴
 
+- v1.0.2で、client別検証対象へ二段階の代表的なimplicit invocationを追加し、completion時のhookでは
+  第一段階を代替できない境界を追加した。
 - [PR #15](https://github.com/agent-operated/exit-criteria/pull/15)で、target familyをCodexだけから
   CodexとClaude Codeへ広げ、この二つのclient-wide scopeの対応表を`README.md`へ置く手段に変更した。
   対応表への掲載だけではsupport claimを成立させず、Claude Codeでimplicit invocationが観測されない

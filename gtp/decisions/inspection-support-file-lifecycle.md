@@ -5,8 +5,10 @@ Exit Criteria Skillが検査に使うmanifestとcheckerを、どこから取得�
 
 ## 採用した手段
 
-Skillは、利用者が明示したmanifest、callerが決めたrepository root直下の既存`exit-criteria.yml`、
-Skillが生成するmanifestの順に使用する。明示されたmanifestと既存manifestは変更しない。明示起動または
+Skillは、planning段階またはretrospective verificationで、利用者が明示したmanifest、callerが決めた
+repository root直下の既存`exit-criteria.yml`、Skillが生成するmanifestの順に使用する。明示されたmanifestと
+既存manifestは変更しない。planning段階では`check`を実行せず、`show-config`が返す実効定義と
+`config_digest`をpre-work baselineとして保持する。明示起動または
 完全な検査記録の要求では、実行前にpathを利用者へ示し、parseできる場合だけcriterionの`argv`も示す。
 暗黙起動では同じ情報を検査用に取得するが、通常の完了報告へ繰り返さない。clientがtrustまたはpermissionの
 境界としてcommandを表示することは妨げず、Exit Criteria独自の承認workflowを追加しない。emptyまたは
@@ -24,7 +26,9 @@ Skillがchild内に作るentryをsymlinkにしない。安全な配置を確立�
 read-only、または検査と利用の間に競合してpathが変わらないことを保証しない。
 
 Skillがtask固有manifestを生成するとき、具体的なcriterionと`argv`を一件も構成できなければcoreを
-起動せず、coverage gapだけを返す。存在しないreportまたは`config_digest`は作らない。明示されたmanifest
+起動せず、planning段階でcoverage gapを記録する。存在しないreportまたは`config_digest`は作らない。
+同じtaskのverification段階では、保持したmanifestを再度`show-config`し、baselineまたは明示的な変更後baselineと
+digestが一致しなければ`check`を起動しない。baselineがないretrospective verificationでは、明示されたmanifest
 または対象の既存manifestがemptyまたはinvalidでもcoreへ渡し、coreのconfig-level `UNAVAILABLE`を
 維持する。具体的なcriterionと`argv`を表現できる場合、実行fileまたはdependencyが利用できないという
 preflight結果を理由にmanifestから省略せず、coverage gapへ変更しない。coreへ渡し、coreが返す
@@ -60,13 +64,17 @@ clientが完全な検査記録を別message、file、metadataなどへ分離で�
 response後も取得できるとはclaimしない。Skillが返却carrierとしてfileを作る場合は、target artifactおよび
 repository rootの外側へ置く。
 
-Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
-終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、
-cleanup前にmanifestとcheckerをtarget artifactおよびrepository rootの外側にあるcaller-ownedの永続場所へ
-保存する。既定ではcache、履歴、再実行用stateを残さない。
+Skillは、自身が作ったtemporary directoryだけを削除する。同じtaskでplanningとverificationを行う場合は
+両段階の間だけ保持し、core結果の取得後、または扱える失敗と中止の終了時に削除する。planningだけでtaskが
+終了する場合は、planning recordの返却または保存後に削除する。Skill process自体が強制終了された場合の
+cleanupは保証しない。callerが明示した場合だけ、cleanup前にmanifestとcheckerをtarget artifactおよび
+repository rootの外側にあるcaller-ownedの永続場所へ保存する。taskまたはsessionを越えてbaselineを使う場合は
+この保存が必要である。既定ではworkflow終了後にcache、履歴、再実行用stateを残さない。
 
 ## 変更履歴
 
+- v1.0.2で、planning段階のpre-work baselineから同じtaskのverificationまでsupport fileを保持し、
+  verification前にdigest一致を要求する二段階lifecycleへ変更した。
 - [Issue #17](https://github.com/agent-operated/exit-criteria/issues/17)を受け、
   [PR #18](https://github.com/agent-operated/exit-criteria/pull/18)で、暗黙起動では利用者の言語でmaterial claimごとの
   平易な説明を返し、明示起動または完全な記録の要求では分離した検査記録を返す手段へ変更。

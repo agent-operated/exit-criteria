@@ -20,7 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..", "..");
 const buildScript = resolve(repoRoot, "scripts", "build-skill-release.mjs");
 const builtAsset = resolve(repoRoot, "dist", "skill", "exit-criteria");
-const releaseTag = "v1.0.1";
+const releaseTag = "v1.0.2";
 
 interface ProcessRun {
   readonly status: number | null;
@@ -188,21 +188,37 @@ test("the tag-input build emits only one standalone Skill directory", (t) => {
   assert.equal(parsed.metadata?.version, releaseTag);
 });
 
-test("the release Skill keeps completion claims outside the status-only exclusion", () => {
+test("the release Skill activates before implementation and before completion", () => {
   const skillDocument = readFileSync(join(builtAsset, "SKILL.md"), "utf8");
   const frontmatter = /^---\n([\s\S]*?)\n---\n/u.exec(skillDocument)?.[1];
   const parsed = parse(frontmatter ?? "") as SkillFrontmatter;
 
   assert.equal(typeof parsed.description, "string");
-  assert.match(parsed.description as string, /Presenting such a target as complete or ready is not status-only work\./u);
+  assert.match(parsed.description as string, /Use at two stages:/u);
+  assert.match(
+    parsed.description as string,
+    /implementation plan[\s\S]*create, change, or fix[\s\S]*acceptance, completion, conformance, or verification/u,
+  );
+  assert.match(
+    parsed.description as string,
+    /no recorded pre-work baseline is retrospective/u,
+  );
   assert.match(
     parsed.description as string,
     /status-only work that makes no completion or readiness claim\./u,
   );
   assert.match(
     skillDocument,
-    /Tests, CI, and manual validation of the target are evidence\.[\s\S]*do not replace inspection/u,
+    /Tests, CI, and manual validation of the target are evidence\.[\s\S]*do not replace defining acceptance criteria before implementation/u,
   );
+  assert.match(skillDocument, /Use the planning stage before the first intentional target mutation/u);
+  assert.match(skillDocument, /Run `show-config`, not `check`/u);
+  assert.match(skillDocument, /Use the verification stage[\s\S]*immediately before presenting/u);
+  assert.match(
+    skillDocument,
+    /verification-stage `show-config` digest must match the baseline[\s\S]*do not run `check`/u,
+  );
+  assert.match(skillDocument, /An amendment does not retroactively become the original pre-work baseline/u);
 });
 
 test("the release Skill explains implicit inspection from user claims in the user's language", () => {
@@ -210,7 +226,7 @@ test("the release Skill explains implicit inspection from user claims in the use
 
   assert.match(
     skillDocument,
-    /Use user-facing mode when the Skill was invoked implicitly[\s\S]*Use full-evidence mode when the user explicitly invoked the Skill/u,
+    /Use user-facing mode during implicit planning[\s\S]*Use full-evidence mode when the user explicitly invoked the Skill/u,
   );
   assert.match(
     skillDocument,
@@ -251,7 +267,7 @@ test("the release Skill keeps exact evidence available only through the selected
   );
   assert.match(
     skillDocument,
-    /In full-evidence mode, return all of those records\. In user-facing mode, do not render them in the ordinary completion message by default\./u,
+    /In full-evidence mode, return all of those records\. In user-facing mode, do not render them in the ordinary planning or completion message by default\./u,
   );
   assert.match(
     skillDocument,
@@ -280,12 +296,14 @@ test("the manual validation table and bundle stay within the selected client bou
   assert.match(readme, /npm packageまたはglobal commandは配布しません/u);
   assert.match(
     readme,
-    /implicitly before a completion claim[\s\S]*in the user's language[\s\S]*complete inspection record/u,
+    /two invocation stages[\s\S]*implementation planning[\s\S]*pre-work baseline[\s\S]*Before a completion claim/u,
   );
   assert.match(
     readme,
-    /完了報告の前に暗黙起動[\s\S]*利用者の言語[\s\S]*完全な検査記録/u,
+    /二段階で起動[\s\S]*implementation planning[\s\S]*pre-work baseline[\s\S]*完了報告の前/u,
   );
+  assert.match(readme, /completion-time hook cannot replace the pre-work planning stage/u);
+  assert.match(readme, /completion時のhookはpre-work planning段階を代替できません/u);
   assert.doesNotMatch(readme, /cursor\.com|\.cursor\/skills/u);
 });
 
