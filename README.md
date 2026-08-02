@@ -27,9 +27,23 @@ the automatically generated GitHub `Source code` archives or copy
 `skills/exit-criteria` from `main`; those contain development source, not the
 bundled runner.
 
-For a first install, place the extracted directory in Codex `USER` scope. Stop
-if the destination already exists. For an update, replace the whole directory
-as one unit instead of merging files from two releases.
+For a first install, choose the client-wide Skill scope from the table and place
+the extracted `exit-criteria` directory at that destination.
+
+| Client | Client-wide scope | Destination | Official documentation |
+| --- | --- | --- | --- |
+| Codex | `USER` | `$HOME/.agents/skills/exit-criteria/` | [Build skills](https://learn.chatgpt.com/docs/build-skills) |
+| Claude Code | `Personal` | `~/.claude/skills/exit-criteria/` | [Extend Claude with skills](https://code.claude.com/docs/en/skills) |
+
+These mappings describe client-wide Skill discovery locations. A row does not
+establish support for that client or surface. Stop if the chosen destination
+already exists. For an update, replace the whole directory as one unit instead
+of merging files from two releases.
+
+The following command is the Codex `USER`-scope example. For another client,
+replace both destination paths with one destination from the table. When a
+table path beginning with `~/` is placed inside quotes, write that prefix as
+`$HOME/` so the shell expands it.
 
 ```console
 mkdir -p "$HOME/.agents/skills" &&
@@ -40,15 +54,24 @@ mkdir -p "$HOME/.agents/skills" &&
 
 The version output must exactly match the selected release tag. Reload the
 client or start a fresh session, confirm that `exit-criteria` is discovered
-from `USER` scope, then explicitly select the Skill or invoke
-`$exit-criteria` where that surface supports it. Record the Skill release,
-client surface and version, OS, Node.js version, manual placement method, and
-observed result. Codex surfaces can be validated independently in any order;
-one result does not establish or prevent support for another surface.
+from the client-wide scope named in the table, then explicitly select or invoke
+the Skill using that client. Record the Skill release, client surface and
+version, OS, Node.js version, manual placement method, and observed result. Each
+client surface is validated independently; one result does not establish or
+prevent support for another surface.
 
-To uninstall, remove the single `$HOME/.agents/skills/exit-criteria` directory
-and reload the client. Caller-owned reports, manifests, and saved evidence are
-not installed runtime state and are not removed with the Skill.
+If Exit Criteria does not activate before a completion claim in your Claude
+Code setup, configure a separate
+[`Stop` hook](https://code.claude.com/docs/en/hooks) as a fallback. A `Stop`
+hook runs whenever the main agent finishes responding, not only when a task is
+complete, and must handle `stop_hook_active` to avoid a loop. This fallback is
+client-side automation. It is not part of Exit Criteria core, the Skill
+installation, or normal use, and it does not guarantee Skill activation or
+compliance. The release asset includes no hook configuration or hook state.
+
+To uninstall, remove only the installed `exit-criteria` directory chosen from
+the table and reload the client. Caller-owned reports, manifests, and saved
+evidence are not installed runtime state and are not removed with the Skill.
 
 ## Example
 
@@ -323,9 +346,21 @@ standalone Skill assetを取得し、対象repository外のtemporary directory�
 自動生成する`Source code` archiveや`main`の`skills/exit-criteria`は使用しません。これらは
 development sourceであり、bundled runnerを含むinstall assetではありません。
 
-初回installでは、展開したdirectory全体をCodexの`USER` scopeへ配置します。配置先が既に存在する
-場合は停止してください。updateでは、異なるreleaseのfileを混在させず、directory全体を一単位で
-置き換えます。
+初回installでは、次の表からclient-wideなSkill scopeを選び、展開した`exit-criteria` directoryを
+対応する配置先へ置きます。
+
+| Client | client-wide scope | 配置先 | 公式資料 |
+| --- | --- | --- | --- |
+| Codex | `USER` | `$HOME/.agents/skills/exit-criteria/` | [Build skills](https://learn.chatgpt.com/docs/build-skills) |
+| Claude Code | `Personal` | `~/.claude/skills/exit-criteria/` | [Extend Claude with skills](https://code.claude.com/docs/en/skills) |
+
+この対応表が示すのは、client-wideなSkillの認識先です。表に載っているだけでは、そのclientまたは
+surfaceのsupport claimにはなりません。配置先が既に存在する場合は停止してください。updateでは、
+異なるreleaseのfileを混在させず、directory全体を一単位で置き換えます。
+
+次のcommandはCodexの`USER` scopeへ配置する例です。別clientでは、二つの配置先pathを表から選んだ
+一つの配置先へ置き換えてください。`~/`で始まるpathを引用符内へ入れる場合は、shellが展開できるよう
+先頭を`$HOME/`と書きます。
 
 ```console
 mkdir -p "$HOME/.agents/skills" &&
@@ -335,13 +370,20 @@ mkdir -p "$HOME/.agents/skills" &&
 ```
 
 version出力が選択したrelease tagと完全一致することを確認します。clientをreloadするか新しいsessionを
-開始し、`exit-criteria`が`USER` scopeから認識されることを確認します。その後、Skillを明示的に選択するか、
-そのsurfaceが対応している場合は`$exit-criteria`で起動します。Skill release、client surfaceとversion、
-OS、Node.js version、manual配置方式、観測結果を記録します。Codex surfaceは任意の順で独立に検証でき、
-一つの結果が別surfaceのsupportを成立させたり、その検証を妨げたりすることはありません。
+開始し、`exit-criteria`が表にあるclient-wide scopeから認識されることを確認します。その後、そのclientで
+Skillを明示的に選択または起動します。Skill release、client surfaceとversion、OS、Node.js version、
+manual配置方式、観測結果を記録します。各client surfaceは独立に検証し、一つの結果が別surfaceの
+supportを成立させたり、その検証を妨げたりすることはありません。
 
-uninstallでは、`$HOME/.agents/skills/exit-criteria` directory一つを削除してclientをreloadします。
-callerが保存したreport、manifest、evidenceはinstalled runtime stateではなく、Skillと一緒には削除されません。
+Claude Codeでcompletion claimの前にExit Criteriaが起動しない場合は、fallbackとして別途
+[`Stop` hook](https://code.claude.com/docs/en/hooks)を設定してください。`Stop` hookはtask完了時だけでなく、
+main agentがresponseを終えるたびに動作するため、loopを避けるには`stop_hook_active`を扱う必要があります。
+このfallbackはclient側automationです。Exit Criteria core、Skillのinstall、通常利用の一部ではなく、
+Skill activationまたはcomplianceを保証しません。release assetへhook設定やhook用stateは同梱しません。
+
+uninstallでは、表から選んでinstallした`exit-criteria` directoryだけを削除し、clientをreloadします。
+callerが保存したreport、manifest、evidenceはinstalled runtime stateではなく、Skillと一緒には
+削除されません。
 
 ## 例
 

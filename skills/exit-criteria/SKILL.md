@@ -1,6 +1,6 @@
 ---
 name: exit-criteria
-description: Inspect an identifiable artifact, state, or requested response draft before acceptance. Map material claims to executable criteria or coverage gaps, run Exit Criteria core, and return separated evidence. Use when explicitly invoked; when the user asks for acceptance, completion, conformance, or verification of a specific target; or before presenting a created or changed target as complete or ready to use, even when no checker is known yet. Response drafts include requested rewrites, translations, transformations, formatted output, and submissions. Do not invoke implicitly for explanation, advice, design discussion, or status-only work.
+description: Inspect an identifiable artifact, state, or requested response draft before acceptance. Map material claims to executable criteria or coverage gaps, run Exit Criteria core, and return separated evidence. Use when explicitly invoked; when the user asks for acceptance, completion, conformance, or verification of a specific target; or before presenting a created or changed target as complete or ready to use, even when no checker is known yet. Presenting such a target as complete or ready is not status-only work. Response drafts include requested rewrites, translations, transformations, formatted output, and submissions. Do not invoke implicitly for explanation, advice, design discussion, or status-only work that makes no completion or readiness claim.
 compatibility: Requires Node.js 20 or newer on macOS or Linux.
 metadata:
   version: "0.0.0-development" # @release-version
@@ -19,9 +19,11 @@ Load the full workflow when either condition applies:
 - The user invokes `$exit-criteria` or selects the Skill explicitly.
 - The user asks to accept, complete, verify, or check conformance of an identifiable artifact or state, or you are about to present an artifact you created or changed as complete or ready to use.
 
-Explicit invocation without an identifiable target loads these instructions but does not start an inspection. Do not invoke implicitly for explanation, advice, design consultation, or status reporting.
+Explicit invocation without an identifiable target loads these instructions but does not start an inspection. Do not invoke implicitly for explanation, advice, design consultation, or status reporting that makes no completion or readiness claim. Presenting an artifact you created or changed as complete or ready to use is not status-only work.
 
 Implicit invocation depends on the client and model. Do not claim that it fires for every matching request.
+
+Tests, CI, and manual validation of the target are evidence. They do not replace inspection of whether the material claims in a completion or readiness claim map to executable criteria or coverage gaps.
 
 A material claim is one whose falsity would change the user's acceptance decision. Enumerate the material claims you find from the request, explicit constraints, and non-goals even when no checker is known. Do not claim that this enumeration is complete.
 

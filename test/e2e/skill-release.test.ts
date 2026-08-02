@@ -45,6 +45,11 @@ interface ShownConfig {
   }[];
 }
 
+interface SkillFrontmatter {
+  readonly description?: unknown;
+  readonly metadata?: { readonly version?: unknown };
+}
+
 function run(command: string, args: readonly string[], cwd: string): ProcessRun {
   const result = spawnSync(command, args, {
     cwd,
@@ -179,8 +184,38 @@ test("the tag-input build emits only one standalone Skill directory", (t) => {
 
   const skillDocument = readFileSync(join(skill, "SKILL.md"), "utf8");
   const frontmatter = /^---\n([\s\S]*?)\n---\n/u.exec(skillDocument)?.[1];
-  const parsed = parse(frontmatter ?? "") as { metadata?: { version?: unknown } };
+  const parsed = parse(frontmatter ?? "") as SkillFrontmatter;
   assert.equal(parsed.metadata?.version, releaseTag);
+});
+
+test("the release Skill keeps completion claims outside the status-only exclusion", () => {
+  const skillDocument = readFileSync(join(builtAsset, "SKILL.md"), "utf8");
+  const frontmatter = /^---\n([\s\S]*?)\n---\n/u.exec(skillDocument)?.[1];
+  const parsed = parse(frontmatter ?? "") as SkillFrontmatter;
+
+  assert.equal(typeof parsed.description, "string");
+  assert.match(parsed.description as string, /Presenting such a target as complete or ready is not status-only work\./u);
+  assert.match(
+    parsed.description as string,
+    /status-only work that makes no completion or readiness claim\./u,
+  );
+  assert.match(
+    skillDocument,
+    /Tests, CI, and manual validation of the target are evidence\.[\s\S]*do not replace inspection/u,
+  );
+});
+
+test("the manual validation table and bundle stay within the selected client boundary", () => {
+  const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+  const clientRows = [...readme.matchAll(/^\| (Codex|Claude Code|Cursor) \|/gmu)].map(
+    (match) => match[1],
+  );
+
+  assert.deepEqual(clientRows, ["Codex", "Claude Code", "Codex", "Claude Code"]);
+  assert.match(readme, /If Exit Criteria does not activate before a completion claim[\s\S]*as a fallback\./u);
+  assert.match(readme, /このfallbackはclient側automationです。/u);
+  assert.match(readme, /release assetへhook設定やhook用stateは同梱しません。/u);
+  assert.doesNotMatch(readme, /cursor\.com|\.cursor\/skills/u);
 });
 
 test("show-config returns normalized effective criteria without starting a checker", (t) => {
