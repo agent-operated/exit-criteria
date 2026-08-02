@@ -1,7 +1,8 @@
 # Contributing
 
-Exit Criteria is currently a source-only development preview. The npm package
-is private and unpublished. Development requires Node.js 20 or later.
+The Exit Criteria core CLI remains source-only. The npm package is private and
+unpublished; the standalone Skill is distributed separately through GitHub
+Release assets. Development requires Node.js 20 or later.
 
 Before changing behavior, read [DESIGN.md](DESIGN.md), [GTP.md](GTP.md), and
 the existing [Decision Records](gtp/decisions/). Preserve the absolute core
@@ -37,8 +38,8 @@ for ordinary bugs and feature discussions.
 
 # コントリビューション
 
-Exit Criteriaは現在、sourceから利用する開発previewです。npm packageはprivateで、未公開です。
-開発にはNode.js 20以上が必要です。
+Exit Criteria core CLIは引き続きsourceから利用します。npm packageはprivateで未公開であり、
+standalone SkillはGitHub Release assetとして別に配布します。開発にはNode.js 20以上が必要です。
 
 挙動を変更する前に、[DESIGN.md](DESIGN.md)、[GTP.md](GTP.md)、既存の
 [Decision Record](gtp/decisions/)を読んでください。`DESIGN.md`のabsolute core boundaryを

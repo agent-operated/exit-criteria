@@ -1,9 +1,9 @@
 # Exit Criteria
 
-> **Development preview:** the npm package is private and unpublished. GitHub
-> prerelease Skill assets, when present, are for manual validation only and do
-> not establish support for any client surface. Do not use `npx` or assume a
-> global `exit-criteria` command.
+> **Distribution status:** the standalone Skill is distributed through
+> versioned GitHub Release assets. The npm package remains private and
+> unpublished. A Skill release alone does not establish support for any client
+> surface. Do not use `npx` or assume a global `exit-criteria` command.
 
 > **Replace an AI's “done” with executed check results.**
 
@@ -15,10 +15,10 @@ It does not replace test runners, spreadsheet validators, PDF inspectors, or
 other domain tools. It runs those tools through one manifest and gives their
 results one versioned machine-readable shape.
 
-## Manually validate a prerelease Skill
+## Install and validate a Skill release
 
-A prerelease Skill requires macOS or Linux and Node.js 20 or later. It is a
-manual validation candidate, not a support claim for any client surface.
+A Skill release requires macOS or Linux and Node.js 20 or later. Installing or
+validating a release does not by itself establish support for any client surface.
 
 Download the standalone Skill asset attached to the selected
 [GitHub release](https://github.com/agent-operated/exit-criteria/releases) and
@@ -59,6 +59,13 @@ the Skill using that client. Record the Skill release, client surface and
 version, OS, Node.js version, manual placement method, and observed result. Each
 client surface is validated independently; one result does not establish or
 prevent support for another surface.
+
+When the Skill is invoked implicitly before a completion claim, the ordinary
+response explains, in the user's language, which requested properties were
+confirmed, which did not hold, and which remain unchecked. It does not use
+criterion names, command counts, or bare core outcomes as the explanation.
+Explicit invocation, or a request for the complete inspection record, returns
+the exact core report when one exists and the separated caller-side evidence.
 
 If Exit Criteria does not activate before a completion claim in your Claude
 Code setup, configure a separate
@@ -311,9 +318,9 @@ Criteria does not turn them into an attestation or claim their authenticity.
 
 ## Supported platforms
 
-The development preview supports macOS and Linux. Windows is not supported.
-The CLI does not block execution on Windows, but Windows behavior is outside
-the supported contract.
+The source CLI and standalone Skill contract cover macOS and Linux. Windows is
+not supported. The CLI does not block execution on Windows, but Windows behavior
+is outside the supported contract.
 
 ## License
 
@@ -323,9 +330,10 @@ the supported contract.
 
 # Exit Criteria（日本語）
 
-> **開発preview:** npm packageはprivateで未公開です。GitHubにprereleaseのSkill
-> assetがある場合もmanual検証専用であり、どのclient surfaceのsupportも意味しません。
-> `npx`やglobalにinstall済みの`exit-criteria` commandを前提にしないでください。
+> **配布状況:** standalone Skillはversion付きGitHub Release assetとして配布します。
+> npm packageは引き続きprivateで未公開です。Skill releaseが存在するだけでは、どのclient
+> surfaceのsupportも意味しません。`npx`やglobalにinstall済みの`exit-criteria` commandを
+> 前提にしないでください。
 
 > **AIの「完成しました」を、実行された検査結果に置き換える。**
 
@@ -336,10 +344,10 @@ local、CI、agentのどこからでも同じ`PASS`、`FAIL`、`UNAVAILABLE`のr
 test runner、Excel検査、PDF検査などを置き換えるものではありません。領域ごとの既存の
 検査toolを一つのmanifestから実行し、結果をversion付きの同じ機械可読形式へまとめます。
 
-## prerelease Skillを手動検証する
+## Skill releaseをinstallして検証する
 
-prerelease SkillにはmacOSまたはLinuxとNode.js 20以上が必要です。これはmanual検証用の
-candidateであり、どのclient surfaceのsupport claimでもありません。
+Skill releaseにはmacOSまたはLinuxとNode.js 20以上が必要です。releaseをinstallまたは
+検証したことだけでは、どのclient surfaceのsupport claimにもなりません。
 
 選択した[GitHub release](https://github.com/agent-operated/exit-criteria/releases)に添付された
 standalone Skill assetを取得し、対象repository外のtemporary directoryへ展開します。GitHubが
@@ -374,6 +382,11 @@ version出力が選択したrelease tagと完全一致することを確認し�
 Skillを明示的に選択または起動します。Skill release、client surfaceとversion、OS、Node.js version、
 manual配置方式、観測結果を記録します。各client surfaceは独立に検証し、一つの結果が別surfaceの
 supportを成立させたり、その検証を妨げたりすることはありません。
+
+Skillが完了報告の前に暗黙起動した場合、通常のresponseでは、依頼のどこを確認でき、どこが
+依頼どおりでなく、何がまだ確認できていないかを利用者の言語で説明します。criterion名、
+command件数、core outcomeだけを説明にはしません。明示起動または完全な検査記録の要求では、
+存在する場合はexact core reportを、caller側evidenceとは分離して返します。
 
 Claude Codeでcompletion claimの前にExit Criteriaが起動しない場合は、fallbackとして別途
 [`Stop` hook](https://code.claude.com/docs/en/hooks)を設定してください。`Stop` hookはtask完了時だけでなく、
@@ -600,8 +613,8 @@ printf '%s\n' "$ec_status" > /absolute/path/to/caller-evidence/exit-status.txt
 
 ## 対応OS
 
-開発previewの対応OSはmacOSとLinuxです。Windowsは未対応です。CLIはWindowsでの実行自体を
-拒否しませんが、Windowsでの挙動はcontract対象外です。
+source CLIとstandalone Skillの対応contractはmacOSとLinuxです。Windowsは未対応です。
+CLIはWindowsでの実行自体を拒否しませんが、Windowsでの挙動はcontract対象外です。
 
 ## ライセンス
 
