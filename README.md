@@ -60,6 +60,13 @@ version, OS, Node.js version, manual placement method, and observed result. Each
 client surface is validated independently; one result does not establish or
 prevent support for another surface.
 
+When the Skill is invoked implicitly before a completion claim, the ordinary
+response explains, in the user's language, which requested properties were
+confirmed, which did not hold, and which remain unchecked. It does not use
+criterion names, command counts, or bare core outcomes as the explanation.
+Explicit invocation, or a request for the complete inspection record, returns
+the exact core report when one exists and the separated caller-side evidence.
+
 If Exit Criteria does not activate before a completion claim in your Claude
 Code setup, configure a separate
 [`Stop` hook](https://code.claude.com/docs/en/hooks) as a fallback. A `Stop`
@@ -374,6 +381,11 @@ version出力が選択したrelease tagと完全一致することを確認し�
 Skillを明示的に選択または起動します。Skill release、client surfaceとversion、OS、Node.js version、
 manual配置方式、観測結果を記録します。各client surfaceは独立に検証し、一つの結果が別surfaceの
 supportを成立させたり、その検証を妨げたりすることはありません。
+
+Skillが完了報告の前に暗黙起動した場合、通常のresponseでは、依頼のどこを確認でき、どこが
+依頼どおりでなく、何がまだ確認できていないかを利用者の言語で説明します。criterion名、
+command件数、core outcomeだけを説明にはしません。明示起動または完全な検査記録の要求では、
+存在する場合はexact core reportを、caller側evidenceとは分離して返します。
 
 Claude Codeでcompletion claimの前にExit Criteriaが起動しない場合は、fallbackとして別途
 [`Stop` hook](https://code.claude.com/docs/en/hooks)を設定してください。`Stop` hookはtask完了時だけでなく、

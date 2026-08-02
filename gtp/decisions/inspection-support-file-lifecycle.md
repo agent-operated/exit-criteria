@@ -6,10 +6,11 @@ Exit Criteria Skillが検査に使うmanifestとcheckerを、どこから取得�
 ## 採用した手段
 
 Skillは、利用者が明示したmanifest、callerが決めたrepository root直下の既存`exit-criteria.yml`、
-Skillが生成するmanifestの順に使用する。明示されたmanifestと既存manifestは変更せず、実行前にpathを
-利用者へ示す。parseできる場合だけcriterionの`argv`も示す。emptyまたはinvalidでparseできないことを
-core呼び出しを止める理由にせず、そのmanifestを変更せずに渡す。既存manifestを実行してよいかはcallerと
-clientのtrustおよびpermission境界に従い、Exit Criteria独自の承認workflowを追加しない。
+Skillが生成するmanifestの順に使用する。明示されたmanifestと既存manifestは変更しない。明示起動または
+完全な検査記録の要求では、実行前にpathを利用者へ示し、parseできる場合だけcriterionの`argv`も示す。
+暗黙起動では同じ情報を検査用に取得するが、通常の完了報告へ繰り返さない。clientがtrustまたはpermissionの
+境界としてcommandを表示することは妨げず、Exit Criteria独自の承認workflowを追加しない。emptyまたは
+invalidでparseできないことをcore呼び出しを止める理由にせず、そのmanifestを変更せずに渡す。
 
 filesystem上のtarget artifactを検査する場合、生成するmanifestとcheckerはtarget artifactおよび
 repository rootの外側にあるfreshなtemporary directoryだけへ置く。この判断でcanonical pathとは、
@@ -29,11 +30,35 @@ Skillがtask固有manifestを生成するとき、具体的なcriterionと`argv`
 preflight結果を理由にmanifestから省略せず、coverage gapへ変更しない。coreへ渡し、coreが返す
 `spawn_failed`、`timeout`、`terminated_by_signal`を`UNAVAILABLE`のまま返す。
 
-core reportを取得した場合、Skillは、そのreportを`config_digest`が存在すればそれを含めて改変せずに返す。
-これとは別にcoverage gapと、reportに`config_digest`がある場合は、そのdigestが識別する実効manifest上で
-reportの`results`に対応するcriterion定義を返す。これらの返却情報だけで、削除済みcheckerを再構成できる
-とはclaimしない。Skillがこれらの返却carrierとしてfileを作る場合も、target artifactおよびrepository rootの
-外側へ置く。
+core reportを取得した場合、Skillは、そのreportを`config_digest`が存在すればそれを含めて改変せずに保持する。
+これとは別にrunner statusとdiagnostics、coverage gap、reportに`config_digest`がある場合は、そのdigestが
+識別する実効manifest上でreportの`results`に対応するcriterion定義を分離して保持する。これらの返却情報だけで、
+削除済みcheckerを再構成できるとはclaimしない。
+
+利用者がSkillを明示起動した場合、または完全な検査記録を要求した場合、Skillはこれらの情報を従来どおり
+分離して返す。completeまたはreadyの提示前に暗黙起動した場合、通常のchat本文には完全な検査記録を
+既定表示せず、material claim、core report、coverage gap、caller-side errorから利用者向け説明を作る。
+この説明はcore reportを翻訳または改変したものではなく、core outcomeを置き換える新しいoutcomeまたは
+受理の承認でもない。
+
+暗黙起動の利用者向け説明は、Agentが従うinstructionの優先順位を守ったうえで、対象ごとに、利用者が
+明示した言語、repositoryの適用可能な指示・仕様・templateが明示的に要求する言語、直接関係する既存の
+会話または文章が一貫して使用する言語、現在の依頼で利用者自身が使用する言語の順に決める。言語を
+指定しないsourceは飛ばす。最初に判断材料がある順位で候補が一つに決まらない場合、または最後まで
+決まらない場合だけ、利用者へ一度確認し、解決するまでcompleteまたはreadyの提示を行わない。Skill自身の
+instructions、同梱した例文、UI metadata、自動生成されたdefault prompt、machine outputは、利用者の言語を
+決める根拠にしない。
+
+選んだ言語で、依頼のどこを確認できたか、どこが依頼どおりでなかったか、どの検査を実行できなかったか、
+何がまだ確認できていないか、利用者が確認または判断する必要があれば何を見ればよいかをmaterial claimごとに
+平易に説明する。criterion ID、command名、検査件数、`argv`、temporary path、full core JSON、または
+`PASS`、`FAIL`、`UNAVAILABLE`だけを説明の主語にしない。正式名称とmachine tokenは完全な検査記録では
+原文を保つ。
+
+clientが完全な検査記録を別message、file、metadataなどへ分離できる場合は、そのcarrierを使用できる。
+分離できない場合、暗黙起動のchat表示を避けるためだけにfileまたは永続stateを作らず、その検査記録が
+response後も取得できるとはclaimしない。Skillが返却carrierとしてfileを作る場合は、target artifactおよび
+repository rootの外側へ置く。
 
 Skillは、自身が作ったtemporary directoryだけを削除する。core結果の取得後、または扱える失敗と中止の
 終了時に行う。Skill process自体が強制終了された場合のcleanupは保証しない。callerが明示した場合だけ、
@@ -42,5 +67,7 @@ cleanup前にmanifestとcheckerをtarget artifactおよびrepository rootの外�
 
 ## 変更履歴
 
+- [Issue #17](https://github.com/agent-operated/exit-criteria/issues/17)を受け、暗黙起動では利用者の言語で
+  material claimごとの平易な説明を返し、明示起動または完全な記録の要求では分離した検査記録を返す手段へ変更。
 - [PR #12](https://github.com/agent-operated/exit-criteria/pull/12)で、返却用fileとopt-inの永続保存先を
   target artifactおよびrepository rootの外側へ限定した。

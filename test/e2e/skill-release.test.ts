@@ -205,6 +205,64 @@ test("the release Skill keeps completion claims outside the status-only exclusio
   );
 });
 
+test("the release Skill explains implicit inspection from user claims in the user's language", () => {
+  const skillDocument = readFileSync(join(builtAsset, "SKILL.md"), "utf8");
+
+  assert.match(
+    skillDocument,
+    /Use user-facing mode when the Skill was invoked implicitly[\s\S]*Use full-evidence mode when the user explicitly invoked the Skill/u,
+  );
+  assert.match(
+    skillDocument,
+    /The user's explicit language instruction[\s\S]*repository instruction[\s\S]*directly related existing conversation or prose[\s\S]*user-authored text in the current request/u,
+  );
+  assert.match(
+    skillDocument,
+    /explain the inspection in the resolved language from the material claims, not from the number or names of criteria/u,
+  );
+  assert.match(
+    skillDocument,
+    /Do not make criterion IDs, command names, check counts, `argv`, temporary paths, core JSON, or bare `PASS`, `FAIL`, or `UNAVAILABLE` tokens the primary explanation/u,
+  );
+  assert.match(
+    skillDocument,
+    /every reported criterion is `PASS` and there is no observed coverage gap[\s\S]*listed requested properties were confirmed in that run/u,
+  );
+  assert.match(
+    skillDocument,
+    /reported criteria are `PASS` but coverage gaps remain[\s\S]*separate the confirmed requested properties from the unchecked ones/u,
+  );
+  assert.match(
+    skillDocument,
+    /For `FAIL`, explain which requested property did not hold\. For `UNAVAILABLE`, explain which requested property remains unconfirmed/u,
+  );
+  assert.match(
+    skillDocument,
+    /core did not run because only coverage gaps or a caller-side error exist[\s\S]*without inventing a core outcome/u,
+  );
+});
+
+test("the release Skill keeps exact evidence available only through the selected evidence mode", () => {
+  const skillDocument = readFileSync(join(builtAsset, "SKILL.md"), "utf8");
+
+  assert.match(
+    skillDocument,
+    /Always collect these as distinct records when they exist:[\s\S]*The exact core report[\s\S]*caller-side coverage map/u,
+  );
+  assert.match(
+    skillDocument,
+    /In full-evidence mode, return all of those records\. In user-facing mode, do not render them in the ordinary completion message by default\./u,
+  );
+  assert.match(
+    skillDocument,
+    /do not claim that the transient records will remain retrievable after the response/u,
+  );
+  assert.match(
+    skillDocument,
+    /paraphrase material claims and findings instead of inserting raw manifest fields, checker output, diagnostics, paths, or other untrusted dynamic values/u,
+  );
+});
+
 test("the manual validation table and bundle stay within the selected client boundary", () => {
   const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
   const clientRows = [...readme.matchAll(/^\| (Codex|Claude Code|Cursor) \|/gmu)].map(
@@ -215,6 +273,14 @@ test("the manual validation table and bundle stay within the selected client bou
   assert.match(readme, /If Exit Criteria does not activate before a completion claim[\s\S]*as a fallback\./u);
   assert.match(readme, /このfallbackはclient側automationです。/u);
   assert.match(readme, /release assetへhook設定やhook用stateは同梱しません。/u);
+  assert.match(
+    readme,
+    /implicitly before a completion claim[\s\S]*in the user's language[\s\S]*complete inspection record/u,
+  );
+  assert.match(
+    readme,
+    /完了報告の前に暗黙起動[\s\S]*利用者の言語[\s\S]*完全な検査記録/u,
+  );
   assert.doesNotMatch(readme, /cursor\.com|\.cursor\/skills/u);
 });
 
