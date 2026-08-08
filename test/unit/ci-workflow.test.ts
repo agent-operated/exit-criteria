@@ -7,9 +7,25 @@ import test from "node:test";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const workflow = readFileSync(resolve(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
 
-test("CI pins third-party actions to immutable commit SHAs", () => {
-  assert.match(workflow, /uses:\s*actions\/checkout@[0-9a-f]{40}(?:\s|$)/u);
-  assert.match(workflow, /uses:\s*actions\/setup-node@[0-9a-f]{40}(?:\s|$)/u);
+test("CI pins every third-party action reference to an immutable commit SHA", () => {
+  const actionReferences = [...workflow.matchAll(/^[ \t]*(?:-[ \t]+)?uses:[ \t]*([^\s#]+)/gmu)].flatMap(
+    (match) => (match[1] === undefined ? [] : [match[1]]),
+  );
+  assert.ok(actionReferences.length > 0, "workflow must declare at least one action");
+
+  const thirdPartyReferences = actionReferences.filter(
+    (reference) => !reference.startsWith("./") && !reference.startsWith("../"),
+  );
+  assert.ok(thirdPartyReferences.length > 0, "workflow must declare a third-party action");
+  for (const reference of thirdPartyReferences) {
+    const revisionSeparator = reference.lastIndexOf("@");
+    assert.notEqual(revisionSeparator, -1, `action reference must include a revision: ${reference}`);
+    assert.match(
+      reference.slice(revisionSeparator + 1),
+      /^[0-9a-f]{40}$/u,
+      `third-party action must use a 40-character commit SHA: ${reference}`,
+    );
+  }
 });
 
 test("CI does not persist checkout credentials into the PR workspace", () => {
