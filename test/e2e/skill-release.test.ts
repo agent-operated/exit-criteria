@@ -20,7 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..", "..");
 const buildScript = resolve(repoRoot, "scripts", "build-skill-release.mjs");
 const builtAsset = resolve(repoRoot, "dist", "skill", "exit-criteria");
-const releaseTag = "v1.0.2";
+const releaseTag = "v1.0.3";
 
 interface ProcessRun {
   readonly status: number | null;

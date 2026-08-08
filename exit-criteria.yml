@@ -19,6 +19,7 @@ criteria:
     argv:
       - node
       - --test
+      - dist/test/unit/ci-workflow.test.js
       - dist/test/unit/core-boundary.test.js
       - dist/test/unit/criteria.test.js
       - dist/test/unit/no-model.test.js
